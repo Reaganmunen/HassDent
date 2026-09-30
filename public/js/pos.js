@@ -7,7 +7,7 @@
   const KES = (c) => money2(c / 100);
 
   const cart = new Map();          // product_id -> { p, qty }
-  let customer = null, method = 'cash', payModal, doneModal, busy = false;
+  let customer = null, walkinName = '', method = 'cash', payModal, doneModal, busy = false;
 
   const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
   const total = () => [...cart.values()].reduce((s, l) => s + cents(l.p.price) * l.qty, 0);
@@ -87,7 +87,7 @@
       box.rows = rows; box.hidden = false;
     } catch (e) { box.hidden = true; }
   }, 250);
-  if (!shell.can('customers.view')) $('cust').hidden = true;
+  if (!shell.can('customers.view')) $('saved-cust-wrap').hidden = true;
   $('cq').addEventListener('input', cSearch);
   $('cres').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
@@ -95,9 +95,22 @@
     $('cres').hidden = true; $('cq').value = ''; $('cq').parentElement.hidden = true;
     $('cchip').hidden = false;
     $('cchip').innerHTML = `<i class="ph-duotone ph-user-circle"></i>${esc(customer.full_name)}<button type="button" aria-label="Remove customer"><i class="ph-bold ph-x"></i></button>`;
+    // Saved customer picked → hide walk-in field and clear any typed name
+    $('walkin-wrap').hidden = true;
+    walkinName = ''; $('wname').value = '';
     search();
   });
-  $('cchip').addEventListener('click', (e) => { if (!e.target.closest('button')) return; customer = null; $('cchip').hidden = true; $('cq').parentElement.hidden = false; search(); });
+  $('cchip').addEventListener('click', (e) => {
+    if (!e.target.closest('button')) return;
+    customer = null; $('cchip').hidden = true; $('cq').parentElement.hidden = false;
+    // Re-show walk-in field when saved customer is removed
+    if (shell.can('customers.view')) $('saved-cust-wrap').hidden = false;
+    $('walkin-wrap').hidden = false;
+    search();
+  });
+
+  // Walk-in name input
+  $('wname').addEventListener('input', () => { walkinName = $('wname').value.trim(); });
 
   // ------------------------------------------------------------ payment
   const amtC = () => cents($('m-amt').value || 0);
@@ -139,6 +152,7 @@
     try {
       const body = { items: [...cart.values()].map((l) => ({ product_id: l.p.id, quantity: l.qty })), payments: got > 0 ? [{ method, amount: got / 100, reference: $('m-ref').value.trim() || undefined }] : [] };
       if (customer) body.customer_id = customer.id;
+      else if (walkinName) body.customer_name = walkinName;
       const sale = await api('/sales', { method: 'POST', body });
       payModal.hide();
       $('d-num').textContent = sale.sale_number ? 'Receipt ' + sale.sale_number : '';
@@ -149,7 +163,11 @@
     finally { busy = false; btn.disabled = false; btn.querySelector('.label').textContent = 'Complete sale'; }
   });
   $('d-new').addEventListener('click', () => {
-    doneModal.hide(); cart.clear(); customer = null; $('cchip').hidden = true; $('cq').parentElement.hidden = false;
+    doneModal.hide(); cart.clear(); customer = null; walkinName = '';
+    $('cchip').hidden = true;
+    if (shell.can('customers.view')) $('saved-cust-wrap').hidden = false;
+    $('cq').parentElement.hidden = false;
+    $('walkin-wrap').hidden = false; $('wname').value = '';
     $('q').value = ''; draw(); search(); $('q').focus();
   });
 

@@ -56,12 +56,16 @@ router.post('/auth/change-password', auth.changePassword);
 
 // users, roles, settings, audit
 router.get('/roles', can('users.manage'), users.roles);
+router.post('/roles', can('users.manage'), users.createRole);
+router.patch('/roles/:id', can('users.manage'), users.updateRole);
+router.delete('/roles/:id', can('users.manage'), users.deleteRole);
 router.get('/permissions', can('users.manage'), users.permissions);
 router.get('/users', can('users.manage'), users.list);
 router.post('/users', can('users.manage'), users.create);
 router.get('/users/:id', can('users.manage'), users.get);
 router.patch('/users/:id', can('users.manage'), users.update);
-router.get('/settings', settings.get);                         // needed by every screen (shop name, VAT, loyalty rules)
+router.delete('/users/:id', can('users.manage'), users.deactivate);
+router.get('/settings', settings.get);
 router.patch('/settings', can('settings.manage'), settings.update);
 router.get('/audit-logs', can('users.manage'), audit.list);
 
@@ -122,7 +126,7 @@ router.post('/customers/:id/notes', can('customers.manage'), customers.addNote);
 router.post('/customers/:id/notes/:noteId/resolve', can('customers.manage'), customers.resolveNote);
 router.delete('/customers/:id/notes/:noteId', can('customers.manage'), customers.deleteNote);
 router.get('/customers/:id/loyalty', can('customers.view'), customers.loyaltyHistory);
-router.post('/customers/:id/loyalty', can('sales.discount'), customers.loyaltyAdjust); // giving points is discount-level power
+router.post('/customers/:id/loyalty', can('sales.discount'), customers.loyaltyAdjust);
 
 // stock
 router.get('/stock/levels', can('stock.view'), stock.levels);
@@ -134,6 +138,7 @@ router.get('/stock/valuation', can('reports.view'), stock.valuation);
 router.get('/stock/integrity', can('reports.view'), stock.integrity);
 router.post('/stock/adjustments', can('stock.adjust'), stock.adjust);
 router.post('/stock/transfers', can('stock.transfer'), stock.transfer);
+router.get('/stock/takes', can('stock.count'), stock.takes);
 router.post('/stock/takes', can('stock.count'), stock.startTake);
 router.get('/stock/takes/:id', can('stock.count'), stock.getTake);
 router.patch('/stock/takes/:id/items/:itemId', can('stock.count'), stock.recordCount);

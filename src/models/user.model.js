@@ -65,6 +65,52 @@ async function listRoles(db) {
 }
 const listPermissions = async (db) => (await query('SELECT * FROM permissions ORDER BY code', [], db)).rows;
 
+async function createRole({ name, description, permissions = [] }, db) {
+  const { rows: [row] } = await query(
+    `INSERT INTO roles (name, description) VALUES ($1,$2) RETURNING id`,
+    [name, description || null], db);
+  if (permissions.length) {
+    await query(
+      `INSERT INTO role_permissions (role_id, permission_id)
+       SELECT $1, id FROM permissions WHERE code = ANY($2)`,
+      [row.id, permissions], db);
+  }
+  const roles = await listRoles(db);
+  return roles.find((r) => r.id === row.id);
+}
+
+async function updateRole(id, { name, description, permissions }, db) {
+  if (name !== undefined || description !== undefined) {
+    await query(
+      `UPDATE roles SET name = COALESCE($1, name), description = COALESCE($2, description) WHERE id = $3`,
+      [name ?? null, description ?? null, id], db);
+  }
+  if (Array.isArray(permissions)) {
+    await query(`DELETE FROM role_permissions WHERE role_id = $1`, [id], db);
+    if (permissions.length) {
+      await query(
+        `INSERT INTO role_permissions (role_id, permission_id)
+         SELECT $1, id FROM permissions WHERE code = ANY($2)`,
+        [id, permissions], db);
+    }
+  }
+  const roles = await listRoles(db);
+  return roles.find((r) => r.id === id) || null;
+}
+
+async function deleteRole(id, db) {
+  const { rows: [{ count }] } = await query(
+    `SELECT COUNT(*)::INT AS count FROM users WHERE role_id = $1`, [id], db);
+  if (count > 0) {
+    const err = new Error(`Cannot delete this role: ${count} user${count === 1 ? '' : 's'} still assigned to it`);
+    err.status = 409;
+    err.code = 'ROLE_IN_USE';
+    throw err;
+  }
+  const { rowCount } = await query(`DELETE FROM roles WHERE id = $1`, [id], db);
+  return rowCount > 0;
+}
+
 // ---- refresh / password-reset tokens (store only the hash) ----
 async function saveToken({ user_id, type, token_hash, expires_at }, db) {
   const { rows: [row] } = await query(
@@ -84,5 +130,8 @@ const markTokenUsed = (id, db) => query('UPDATE user_tokens SET used_at = NOW() 
 const revokeUserTokens = (user_id, type, db) =>
   query('UPDATE user_tokens SET used_at = NOW() WHERE user_id = $1 AND type = $2 AND used_at IS NULL', [user_id, type], db);
 
-module.exports = { create, findByEmail, findById, list, update, touchLastLogin,
-  listRoles, listPermissions, saveToken, findValidToken, markTokenUsed, revokeUserTokens };
+module.exports = {
+  create, findByEmail, findById, list, update, touchLastLogin,
+  listRoles, listPermissions, createRole, updateRole, deleteRole,
+  saveToken, findValidToken, markTokenUsed, revokeUserTokens,
+};

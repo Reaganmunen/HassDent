@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customers · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/customers.css">
+</head>
+<body data-page="customers">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <!-- ============ Top bar ============ -->
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title">
+          <h1>Customers</h1>
+          <div class="sub" id="greeting">&nbsp;</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh data"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+
+          <div class="dropdown">
+            <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+              <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notif-menu">
+              <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+              <div class="notif-list" id="notif-list"><div class="notif-empty">Loading…</div></div>
+            </div>
+          </div>
+
+          <a class="btn-cta" href="pos.html" data-perm="sales.create">
+            <span class="txt">New Sale</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
+          </a>
+        </div>
+      </header>
+
+      <!-- ============ Content ============ -->
+      <div class="row grid-gap">
+
+        <!-- ===== ADD CUSTOMER CARD ===== -->
+        <div class="col-12" id="add-customer-card">
+          <div class="card-hd form-card">
+            <div class="card-title-row">
+              <h2><i class="ph-duotone ph-user-plus" style="margin-right: 8px;"></i>Add a customer</h2>
+              <span class="count-pill" id="form-mode-badge" hidden>Editing</span>
+            </div>
+
+            <form id="customer-form" autocomplete="off">
+              <input type="hidden" id="customer-id" value="">
+              <div class="form-row">
+                <div class="field">
+                  <label for="full_name">Full name *</label>
+                  <input type="text" id="full_name" placeholder="e.g. Dr. Jane Mwangi" required>
+                </div>
+             <div class="field">
+  <label for="customer_type">Customer type</label>
+  <select id="customer_type">
+    <option value="individual">Individual</option>
+    <option value="business">Business / Clinic</option>
+  </select>
+</div>
+                <div class="field">
+                  <label for="organization_name">Organization</label>
+                  <input type="text" id="organization_name" placeholder="Clinic / hospital name">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label for="phone">Phone *</label>
+                  <input type="tel" id="phone" placeholder="0712 345 678" required>
+                </div>
+                <div class="field">
+                  <label for="alt_phone">Alt. phone</label>
+                  <input type="tel" id="alt_phone" placeholder="Optional">
+                </div>
+                <div class="field">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" placeholder="name@example.com">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field" style="flex: 2 1 260px;">
+                  <label for="address">Address</label>
+                  <input type="text" id="address" placeholder="Street, building, town">
+                </div>
+                <div class="field">
+                  <label for="customer_group_id">Customer group</label>
+                  <select id="customer_group_id">
+                    <option value="">— Default —</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="credit_limit">Credit limit (KES)</label>
+                  <input type="number" id="credit_limit" min="0" step="100" placeholder="0.00" value="0">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field inline-check">
+                  <input type="checkbox" id="is_active" checked>
+                  <label for="is_active">Active</label>
+                </div>
+                <div class="field inline-check">
+                  <input type="checkbox" id="show_on_checkin">
+                  <label for="show_on_checkin">Flag for check‑in alert</label>
+                </div>
+                <div class="field" style="flex: 3 1 200px;">
+                  <label for="note">Note (optional)</label>
+                  <input type="text" id="note" placeholder="Any special note about this customer">
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-custom" id="btn-save">
+                  <i class="ph-bold ph-check"></i> <span id="save-label">Save customer</span>
+                </button>
+                <button type="button" class="btn-ghost" id="btn-cancel" hidden>Cancel edit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ===== CUSTOMER LIST ===== -->
+        <div class="col-12">
+          <div class="card-hd">
+            <div class="card-title-row" style="flex-wrap: wrap; gap: 10px;">
+              <h2><i class="ph-duotone ph-users-three" style="margin-right: 8px;"></i>Customer list</h2>
+              <span class="count-pill" id="customer-count">0</span>
+              <div class="search-wrap" style="margin-left: auto; min-width: 220px; flex: 1 1 200px;">
+                <i class="ph-duotone ph-magnifying-glass"></i>
+                <input type="search" id="search-input" placeholder="Search by name, phone, or organisation…">
+              </div>
+              <select id="filter-group" class="form-select">
+                <option value="">All groups</option>
+              </select>
+              <button class="btn-ghost" id="btn-clear-filters" style="padding: 8px 16px; font-size: .78rem;">Clear</button>
+            </div>
+
+            <div id="customer-list-body">
+              <div class="sk sk-line"></div>
+              <div class="sk sk-line"></div>
+              <div class="sk sk-line"></div>
+              <div class="sk sk-line"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.row -->
+    </div><!-- /.main -->
+  </div><!-- /.app -->
+
+  <!-- toast -->
+  <div class="toast-msg" id="toast"><i class="ph-duotone ph-check-circle"></i><span id="toast-text">Saved</span></div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/customers.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+/* Settings page */
+.form-card .card-hd { padding: 20px 22px 22px; }
+.form-row { display: flex; flex-wrap: wrap; gap: 14px 18px; margin-bottom: 12px; align-items: flex-start; }
+.form-row .field { flex: 1 1 180px; min-width: 0; }
+.form-row .field label { font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--hd-muted); margin-bottom: 4px; display: block; }
+.form-row .field .hint { display: block; font-size: .72rem; color: var(--hd-muted); margin-top: 4px; font-weight: 500; }
+.form-row .field input, .form-row .field select, .form-row .field textarea {
+  width: 100%; border: 1px solid var(--hd-line); border-radius: 14px; padding: 10px 14px;
+  font-size: .86rem; font-weight: 500; background: #fcfcfa; transition: .15s; color: var(--hd-ink);
+}
+.form-row .field input:focus, .form-row .field select:focus, .form-row .field textarea:focus {
+  outline: none; border-color: var(--hd-lime-deep); background: #fff; box-shadow: 0 0 0 3px rgba(216, 240, 60, .25);
+}
+.form-row .field textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+.form-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.btn-primary-custom {
+  background: var(--hd-ink); border: 0; border-radius: 14px; padding: 10px 26px;
+  font-weight: 700; font-size: .86rem; color: #fff;
+  display: inline-flex; align-items: center; gap: 6px; transition: .15s; cursor: pointer;
+}
+.btn-primary-custom:hover { background: #2a2a2c; color: #fff; }
+.btn-primary-custom:disabled { opacity: .5; }
+.toast-msg {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: var(--hd-ink); color: #fff; border-radius: 16px; padding: 14px 22px;
+  font-weight: 600; font-size: .86rem; box-shadow: 0 18px 40px -12px rgba(0,0,0,.4);
+  display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px);
+  transition: .25s; pointer-events: none;
+}
+.toast-msg.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.toast-msg i { font-size: 1.4rem; color: var(--hd-lime); }
+.toast-msg.error i { color: #ff8a8a; }
+.read-only-banner {
+  background: #fff1d6; color: #9a5b00; border-radius: 14px; padding: 12px 16px;
+  font-size: .82rem; font-weight: 600; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+@media (max-width: 576px) { .form-row .field { flex: 1 1 100%; } }

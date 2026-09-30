@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/products.css">
+  <link rel="stylesheet" href="css/stock.css">
+</head>
+<body data-page="stock">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title"><h1>Stock</h1><div class="sub">Levels, movements, alerts and counts</div></div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+          <div class="dropdown">
+            <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+              <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notif-menu">
+              <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+              <div class="notif-list" id="notif-list"><div class="notif-empty">Loading…</div></div>
+            </div>
+          </div>
+          <button class="btn btn-light btn-top" id="btn-transfer" type="button" data-perm="stock.transfer"><i class="ph-duotone ph-arrows-left-right"></i><span class="txt">Transfer</span></button>
+          <button class="btn-cta" id="btn-adjust" type="button" data-perm="stock.adjust">
+            <span class="txt">Adjust stock</span><span class="plus"><i class="ph-bold ph-plus-minus"></i></span>
+          </button>
+        </div>
+      </header>
+
+      <div class="hd-alert hd-alert-success mb-3" id="flash" hidden><i class="ph-duotone ph-check-circle"></i><span></span></div>
+      <div class="hd-alert hd-alert-danger mb-3" id="integrity" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+
+      <div class="row grid-gap">
+        <div class="col-12 col-sm-6 col-xl-3" data-perm="reports.view">
+          <div class="card-hd stat dark" id="stat-value"><div class="top"><span class="s-ico"><i class="ph-duotone ph-coins"></i></span><span class="s-label">Stock value</span></div>
+            <div class="s-value sk" data-v>KES 00,000</div><div class="s-foot sk" data-f>At cost price</div></div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card-hd stat" id="stat-units"><div class="top"><span class="s-ico"><i class="ph-duotone ph-stack"></i></span><span class="s-label">Units on hand</span></div>
+            <div class="s-value sk" data-v>00,000</div><div class="s-foot sk" data-f>All locations</div></div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card-hd stat amber" id="stat-low"><div class="top"><span class="s-ico"><i class="ph-duotone ph-package"></i></span><span class="s-label">Low stock</span></div>
+            <div class="s-value sk" data-v>00</div><div class="s-foot sk" data-f>At or below reorder level</div></div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card-hd stat sky" id="stat-exp"><div class="top"><span class="s-ico"><i class="ph-duotone ph-hourglass-high"></i></span><span class="s-label">Expiring batches</span></div>
+            <div class="s-value sk" data-v>00</div><div class="s-foot sk" data-f>Expired or close to expiry</div></div>
+        </div>
+
+        <div class="col-12">
+          <div class="card-hd">
+            <div class="tabbar">
+              <div class="seg" id="tabs" role="tablist">
+                <button type="button" data-tab="levels" class="on">Levels</button>
+                <button type="button" data-tab="movements">Movements</button>
+                <button type="button" data-tab="low">Low stock</button>
+                <button type="button" data-tab="expiring">Expiring</button>
+                <button type="button" data-tab="takes" data-perm="stock.count">Counts</button>
+              </div>
+              <div class="tools" id="tools"></div>
+            </div>
+            <div id="panel"></div>
+            <div class="pager" id="pager" hidden></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- adjust / transfer modal -->
+  <div class="modal fade" id="mModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content">
+      <form id="m-form" novalidate>
+        <div class="modal-header"><h2 class="modal-title" id="m-title">Adjust stock</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+          <div class="hd-alert hd-alert-danger mb-3" id="m-error" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4"><label class="hd-label" for="m-loc" id="m-loc-label">Location</label><select class="form-select" id="m-loc"></select></div>
+            <div class="col-md-4" id="m-to-wrap"><label class="hd-label" for="m-to">To location</label><select class="form-select" id="m-to"></select></div>
+            <div class="col-md-4" id="m-reason-wrap"><label class="hd-label" for="m-reason">Reason</label>
+              <select class="form-select" id="m-reason"><option value="damaged">Damaged</option><option value="expired">Expired</option><option value="lost">Lost</option><option value="found">Found</option><option value="correction" selected>Correction</option><option value="sample">Sample</option><option value="other">Other</option></select></div>
+            <div class="col-md-8"><label class="hd-label" for="m-notes">Notes</label><input class="form-control" id="m-notes" maxlength="300" placeholder="Optional"></div>
+          </div>
+          <label class="hd-label" for="m-search">Add products</label>
+          <div class="picker"><div class="hd-field"><i class="ph-duotone ph-magnifying-glass field-icon"></i><input class="form-control" id="m-search" type="search" placeholder="Search name, SKU or barcode" autocomplete="off"></div><div class="results" id="m-results" hidden></div></div>
+          <div id="m-lines" class="lines"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-hd" id="m-save">Save</button></div>
+      </form>
+    </div></div>
+  </div>
+
+  <!-- new count modal -->
+  <div class="modal fade" id="nModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content">
+      <form id="n-form">
+        <div class="modal-header"><h2 class="modal-title">Start a stock count</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+          <div class="hd-alert hd-alert-danger mb-3" id="n-error" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+          <label class="hd-label" for="n-loc">Location</label><select class="form-select mb-3" id="n-loc"></select>
+          <label class="hd-label" for="n-notes">Notes</label><input class="form-control" id="n-notes" maxlength="300" placeholder="Optional">
+          <p class="small text-muted mt-3 mb-0">Snapshots today's system quantities so you can count against them.</p>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-hd" id="n-save">Start count</button></div>
+      </form>
+    </div></div>
+  </div>
+
+  <!-- count sheet modal -->
+  <div class="modal fade" id="cModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><div><h2 class="modal-title" id="c-title">Stock count</h2><div class="small text-muted" id="c-sub"></div></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body">
+        <div class="hd-alert hd-alert-danger mb-3" id="c-error" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+        <div class="hd-field mb-3"><i class="ph-duotone ph-magnifying-glass field-icon"></i><input class="form-control" id="c-search" type="search" placeholder="Filter products" autocomplete="off"></div>
+        <div id="c-body"></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-hd" id="c-complete" hidden>Complete count</button></div>
+    </div></div>
+  </div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/stock.js"></script>
+</body>
+</html>

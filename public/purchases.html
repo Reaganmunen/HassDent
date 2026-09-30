@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Purchases · HassDent Dental Supplies</title>
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel ="stylesheet" href="css/pos.css">
+  <link rel="stylesheet" href="css/purchases.css">
+</head>
+<body data-page="purchases">
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sb-scrim" id="sb-scrim"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+      <div class="title"><h1>Purchases</h1><div class="sub">Order from suppliers and receive stock</div></div>
+      <div class="actions">
+        <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+        <div class="dropdown">
+          <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-label="Notifications">
+            <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span></button>
+          <div class="dropdown-menu dropdown-menu-end notif-menu">
+            <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+            <div class="notif-list" id="notif-list"></div>
+          </div>
+        </div>
+        <button class="btn btn-light border fw-bold" id="btn-receive" type="button" data-perm="purchases.receive"><i class="ph-duotone ph-package"></i> <span class="d-none d-sm-inline">Receive goods</span></button>
+        <button class="btn-cta" id="btn-new" type="button" data-perm="purchases.manage"><span class="txt">New order</span><span class="plus"><i class="ph-bold ph-plus"></i></span></button>
+      </div>
+    </header>
+
+    <div class="row grid-gap">
+      <div class="col-6 col-xl-3"><div class="card-hd stat dark" id="s-open"><div class="top"><span class="s-ico"><i class="ph-duotone ph-truck"></i></span><span class="s-label">Open orders</span></div><div class="s-value sk" data-v>00</div><div class="s-foot sk" data-f>Awaiting delivery</div></div></div>
+      <div class="col-6 col-xl-3"><div class="card-hd stat amber" id="s-value"><div class="top"><span class="s-ico"><i class="ph-duotone ph-coins"></i></span><span class="s-label">On order</span></div><div class="s-value sk" data-v>KES 00,000</div><div class="s-foot sk" data-f>Value of open orders</div></div></div>
+      <div class="col-6 col-xl-3"><div class="card-hd stat" id="s-draft"><div class="top"><span class="s-ico"><i class="ph-duotone ph-note-pencil"></i></span><span class="s-label">Drafts</span></div><div class="s-value sk" data-v>00</div><div class="s-foot sk" data-f>Not yet sent</div></div></div>
+      <div class="col-6 col-xl-3"><div class="card-hd stat sky" id="s-recv"><div class="top"><span class="s-ico"><i class="ph-duotone ph-package"></i></span><span class="s-label">Received this month</span></div><div class="s-value sk" data-v>KES 00,000</div><div class="s-foot sk" data-f>Goods received</div></div></div>
+
+      <div class="col-12">
+        <div class="card-hd">
+          <div class="card-title-row flex-wrap">
+            <div class="seg ms-0" id="tabs" role="tablist"><button type="button" data-tab="po" class="on">Purchase orders</button><button type="button" data-tab="grn">Goods received</button></div>
+            <div class="seg" id="status-seg" role="group" aria-label="Status filter">
+              <button type="button" data-s="" class="on">All</button><button type="button" data-s="draft">Draft</button><button type="button" data-s="ordered">Ordered</button><button type="button" data-s="partially_received">Partial</button><button type="button" data-s="received">Received</button><button type="button" data-s="cancelled">Cancelled</button>
+            </div>
+          </div>
+          <div class="filters">
+            <input id="f-q" class="form-control" type="search" placeholder="Search number, supplier or invoice…" autocomplete="off">
+            <select id="f-sup" class="form-select"><option value="">All suppliers</option></select>
+          </div>
+          <div id="list"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- create order / receive goods -->
+<div class="modal fade" id="docModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable"><div class="modal-content pay-modal">
+    <div class="modal-header border-0 pb-0 px-4 pt-4"><h2 class="h5 fw-bold m-0" id="d-title">New purchase order</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body px-4">
+      <div class="hd-alert hd-alert-danger mb-3" id="d-err" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-4"><label class="hd-label" for="d-sup">Supplier</label><select id="d-sup" class="form-select"></select></div>
+        <div class="col-md-4"><label class="hd-label" for="d-date" id="d-date-l">Expected date</label><input id="d-date" type="date" class="form-control"></div>
+        <div class="col-md-4" id="d-inv-w" hidden><label class="hd-label" for="d-inv">Supplier invoice no.</label><input id="d-inv" class="form-control" maxlength="50"></div>
+        <div class="col-12"><label class="hd-label" for="d-notes">Notes</label><input id="d-notes" class="form-control" maxlength="300" placeholder="Optional"></div>
+      </div>
+      <div class="pos-search mb-2" id="d-search-w"><i class="ph-duotone ph-magnifying-glass"></i><input id="d-q" class="form-control" type="search" placeholder="Search a product to add…" autocomplete="off"><div id="d-res" class="cust-res" hidden></div></div>
+      <div class="tbl-wrap"><table class="tbl lines-tbl"><thead><tr><th>Product</th><th style="width:90px">Qty</th><th style="width:120px">Unit cost</th><th class="rcv" style="width:130px">Batch no.</th><th class="rcv" style="width:150px">Expiry</th><th class="num" style="width:120px">Total</th><th style="width:36px"></th></tr></thead><tbody id="d-lines"></tbody></table></div>
+      <div class="totals"><div class="grand"><span>Total (excl. VAT)</span><b id="d-total">KES 0.00</b></div></div>
+    </div>
+    <div class="modal-footer border-0 px-4 pb-4 pt-0"><button class="btn btn-hd btn-lg w-100" id="d-save" type="button"><span class="label">Save order</span></button></div>
+  </div></div>
+</div>
+
+<!-- detail -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content pay-modal">
+    <div class="modal-body p-4" id="v-body"></div>
+  </div></div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/purchases.js"></script>
+</body>
+</html>

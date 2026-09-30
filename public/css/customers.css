@@ -1,0 +1,104 @@
+/* Customers page */
+
+.form-card .card-hd { padding: 20px 22px 22px; }
+
+.form-row { display: flex; flex-wrap: wrap; gap: 14px 18px; margin-bottom: 12px; align-items: flex-end; }
+.form-row .field { flex: 1 1 180px; min-width: 0; }
+.form-row .field label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--hd-muted); margin-bottom: 4px; display: block;
+}
+.form-row .field input,
+.form-row .field select,
+.form-row .field textarea {
+  width: 100%; border: 1px solid var(--hd-line); border-radius: 14px; padding: 10px 14px;
+  font-size: .86rem; font-weight: 500; background: #fcfcfa; transition: .15s; color: var(--hd-ink);
+}
+.form-row .field input:focus,
+.form-row .field select:focus,
+.form-row .field textarea:focus {
+  outline: none; border-color: var(--hd-lime-deep); background: #fff;
+  box-shadow: 0 0 0 3px rgba(216, 240, 60, .25);
+}
+.form-row .field textarea { resize: vertical; min-height: 70px; }
+
+.form-row .field.inline-check { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.form-row .field.inline-check label {
+  text-transform: none; font-size: .84rem; font-weight: 600;
+  letter-spacing: 0; margin: 0; color: var(--hd-ink);
+}
+.form-row .field.inline-check input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--hd-lime-deep); border-radius: 5px;
+}
+
+.form-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+.btn-primary-custom {
+  background: var(--hd-ink); border: 0; border-radius: 14px; padding: 10px 26px;
+  font-weight: 700; font-size: .86rem; color: #fff;
+  display: inline-flex; align-items: center; gap: 6px; transition: .15s;
+}
+.btn-primary-custom:hover { background: #2a2a2c; color: #fff; }
+.btn-primary-custom:disabled { opacity: .5; }
+
+.btn-ghost {
+  background: transparent; border: 1px solid var(--hd-line); border-radius: 14px;
+  padding: 10px 22px; font-weight: 600; font-size: .86rem; color: var(--hd-ink); transition: .15s;
+}
+.btn-ghost:hover { background: #f2f2ee; border-color: #d0d0c8; }
+
+.search-wrap { position: relative; }
+.search-wrap i {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--hd-muted); font-size: 1.1rem;
+}
+.search-wrap input {
+  padding-left: 42px; border-radius: 14px; border: 1px solid var(--hd-line);
+  background: #fcfcfa; width: 100%; height: 42px; font-size: .86rem; font-weight: 500;
+}
+.search-wrap input:focus {
+  outline: none; border-color: var(--hd-lime-deep); background: #fff;
+  box-shadow: 0 0 0 3px rgba(216, 240, 60, .25);
+}
+
+#filter-group {
+  width: auto; border-radius: 14px; border: 1px solid var(--hd-line);
+  padding: 8px 14px; font-size: .82rem; font-weight: 600; background: #fcfcfa;
+}
+
+.customer-table .tbl td { padding: 10px 8px; }
+.customer-table .tbl th { padding: 0 8px 8px; }
+.customer-table .cell-main .thumb {
+  background: var(--hd-lime-soft); font-size: 1rem; width: 34px; height: 34px;
+}
+
+.status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #2bb673; margin-right: 5px;
+}
+.status-dot.inactive { background: #c0c0b8; }
+
+.action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.action-btns .icon-btn-sm {
+  border: 1px solid var(--hd-line); background: transparent; border-radius: 10px;
+  padding: 5px 10px; font-size: .72rem; font-weight: 600; color: var(--hd-ink);
+  display: inline-flex; align-items: center; gap: 4px; transition: .12s;
+}
+.action-btns .icon-btn-sm:hover { background: #f2f2ee; text-decoration: none; }
+.action-btns .icon-btn-sm.danger { color: #b3262b; border-color: #f0d6d6; }
+.action-btns .icon-btn-sm.danger:hover { background: #fce8e8; }
+
+.toast-msg {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: var(--hd-ink); color: #fff; border-radius: 16px; padding: 14px 22px;
+  font-weight: 600; font-size: .86rem; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .4);
+  display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px);
+  transition: .25s; pointer-events: none;
+}
+.toast-msg.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.toast-msg i { font-size: 1.4rem; color: var(--hd-lime); }
+.toast-msg.error i { color: #ff8a8a; }
+
+@media (max-width: 576px) {
+  .form-row .field { flex: 1 1 100%; }
+}

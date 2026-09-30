@@ -9,11 +9,12 @@ types.setTypeParser(20, (v) => parseInt(v, 10));
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: Number(process.env.DB_POOL_MAX || 10),
-});
-
-// Everything the shop does happens in Nairobi time.
-pool.on('connect', (client) => {
-  client.query("SET TIME ZONE 'Africa/Nairobi'");
+  // Everything the shop does happens in Nairobi time. Set via the startup
+  // packet so the session timezone is active for the very first query on
+  // every pooled connection. Doing this in a 'connect' listener fires a
+  // fire-and-forget client.query() that can race with the next query on the
+  // same client (pg@9 deprecation warning, and a real correctness bug).
+  options: '-c timezone=Africa/Nairobi',
 });
 
 /**

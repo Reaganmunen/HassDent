@@ -1,0 +1,27 @@
+/* Products page (builds on dashboard.css card/table/pill styles) */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.filters .search { flex: 1 1 240px; }
+.filters .search .form-control { height: 46px; }
+.filters .form-select { width: auto; min-width: 160px; height: 46px; border-radius: 14px; border: 1.5px solid var(--hd-line); background-color: #fafaf8; font-weight: 600; font-size: .86rem; }
+.filters .seg { margin-left: 0; }
+.tbl tbody tr.clickable { cursor: pointer; transition: background-color .12s; }
+.tbl tbody tr.clickable:hover { background: #fafaf8; }
+.tbl .act { display: flex; gap: 6px; justify-content: flex-end; }
+.mini-btn { width: 34px; height: 34px; border-radius: 11px; border: 1px solid var(--hd-line); background: #fff; display: grid; place-items: center; font-size: 1.1rem; color: var(--hd-ink); }
+.mini-btn:hover { background: var(--hd-lime-soft); border-color: var(--hd-lime-deep); }
+.pill.off { background: #f0f0ec; color: var(--hd-muted); }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: .8rem; font-weight: 600; color: var(--hd-muted); }
+.pager .btns { display: flex; gap: 6px; }
+.pager button { border: 1px solid var(--hd-line); background: #fff; border-radius: 10px; padding: 6px 12px; font-weight: 700; font-size: .8rem; }
+.pager button:disabled { opacity: .45; }
+.offcanvas { --bs-offcanvas-width: 460px; }
+.offcanvas-title { font-size: 1.1rem; font-weight: 800; }
+.dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 0 0 18px; }
+.dl div { min-width: 0; }
+.dl dt { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--hd-muted); }
+.dl dd { margin: 2px 0 0; font-weight: 700; font-size: .9rem; overflow-wrap: anywhere; }
+.dh { font-size: .8rem; font-weight: 800; margin: 18px 0 6px; }
+.modal-title { font-size: 1.1rem; font-weight: 800; }
+.modal .form-control, .modal .form-select { border-radius: 12px; border: 1.5px solid var(--hd-line); font-weight: 500; }
+.modal .form-control:focus, .modal .form-select:focus { border-color: var(--hd-ink); box-shadow: 0 0 0 4px rgba(216, 240, 60, .45); }
+@media (max-width: 575.98px) { .filters .form-select { flex: 1 1 140px; } .dl { grid-template-columns: 1fr; } }

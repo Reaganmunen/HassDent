@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Point of Sale · HassDent Dental Supplies</title>
-  <link rel="icon" type="image/png" href="/img/favicon.png">
-  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
-  <link rel="stylesheet" href="/vendor/phosphor/duotone.css">
-  <link rel="stylesheet" href="/vendor/phosphor/bold.css">
-  <link rel="stylesheet" href="/css/theme.css">
-  <link rel="stylesheet" href="/css/shell.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
-  <link rel="stylesheet" href="/css/pos.css">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/pos.css">
 </head>
 <body data-page="pos">
 <div class="app">
@@ -49,10 +49,17 @@
             <button class="see-all border-0 bg-transparent" id="clear" type="button"><i class="ph-duotone ph-trash"></i> Clear</button></div>
 
           <div class="cust" id="cust">
-            <div class="pos-search sm"><i class="ph-duotone ph-user-plus"></i>
-              <input id="cq" class="form-control" type="search" placeholder="Customer (optional): name or phone" autocomplete="off"></div>
-            <div id="cres" class="cust-res" hidden></div>
-            <div id="cchip" class="cust-chip" hidden></div>
+            <div id="saved-cust-wrap">
+              <div class="pos-search sm"><i class="ph-duotone ph-user-plus"></i>
+                <input id="cq" class="form-control" type="search" placeholder="Customer (optional): name or phone" autocomplete="off"></div>
+              <div id="cres" class="cust-res" hidden></div>
+              <div id="cchip" class="cust-chip" hidden></div>
+            </div>
+            <div class="pos-search sm mt-2" id="walkin-wrap">
+              <i class="ph-duotone ph-pencil-simple"></i>
+              <input id="wname" class="form-control" type="text" maxlength="150"
+                     placeholder="Or type walk-in name for the receipt (optional)" autocomplete="off">
+            </div>
           </div>
 
           <div id="lines" class="lines"><div class="state-box"><i class="ph-duotone ph-shopping-cart"></i><div>Cart is empty</div></div></div>
@@ -106,9 +113,9 @@
   </div></div>
 </div>
 
-<script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-<script src="/js/api.js"></script>
-<script src="/js/shell.js"></script>
-<script src="/js/pos.js"></script>
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/pos.js"></script>
 </body>
 </html>

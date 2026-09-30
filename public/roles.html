@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roles · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/roles.css">
+</head>
+<body data-page="roles">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title">
+          <h1>Roles &amp; permissions</h1>
+          <div class="sub" id="greeting">&nbsp;</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+          <div class="dropdown">
+            <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+              <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notif-menu">
+              <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+              <div class="notif-list" id="notif-list"><div class="notif-empty">Loading…</div></div>
+            </div>
+          </div>
+          <a class="btn-cta" href="pos.html" data-perm="sales.create">
+            <span class="txt">New Sale</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
+          </a>
+        </div>
+      </header>
+
+      <div class="row grid-gap">
+        <div class="col-12" id="role-form-card">
+          <div class="card-hd form-card">
+            <div class="card-title-row">
+              <h2><i class="ph-duotone ph-shield-plus" style="margin-right:8px;"></i>Add a role</h2>
+              <span class="count-pill" id="form-mode-badge" hidden>Editing</span>
+            </div>
+            <form id="role-form" autocomplete="off">
+              <input type="hidden" id="role-id" value="">
+              <div class="form-row">
+                <div class="field" style="flex:1 1 220px;">
+                  <label for="role-name">Role name *</label>
+                  <input type="text" id="role-name" maxlength="50" placeholder="e.g. supervisor" required>
+                  <small class="hint">Lowercase letters, digits, underscores.</small>
+                </div>
+                <div class="field" style="flex:2 1 320px;">
+                  <label for="role-description">Description</label>
+                  <input type="text" id="role-description" maxlength="200" placeholder="What can this role do?">
+                </div>
+              </div>
+              <div class="perm-section">
+                <div class="perm-section-head">
+                  <b>Permissions</b>
+                  <button type="button" class="link-btn" id="toggle-all-perms">Select / clear all</button>
+                </div>
+                <div class="perm-grid" id="perm-grid"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-custom" id="btn-save"><i class="ph-bold ph-check"></i> <span id="save-label">Create role</span></button>
+                <button type="button" class="btn-ghost" id="btn-cancel" hidden>Cancel edit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card-hd">
+            <div class="card-title-row">
+              <h2><i class="ph-duotone ph-shield-check" style="margin-right:8px;"></i>All roles</h2>
+              <span class="count-pill" id="role-count">0</span>
+            </div>
+            <div id="roles-body"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-msg" id="toast"><i class="ph-duotone ph-check-circle"></i><span id="toast-text">Saved</span></div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/roles.js"></script>
+</body>
+</html>

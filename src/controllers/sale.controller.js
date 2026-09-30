@@ -26,8 +26,12 @@ function parsePayments(list) {
 
 /**
  * The POS checkout.
- * Body: { customer_id?, items:[{product_id,quantity,unit_price?,discount_amount?}], payments:[{method,amount,reference?}],
- *         discount_amount?, loyalty_points_to_redeem?, status?:'held', notes? }
+ * Body: {
+ *   customer_id?, customer_name?,                            // mutually exclusive; omit both for anonymous walk-in
+ *   items: [{ product_id, quantity, unit_price?, discount_amount? }],
+ *   payments: [{ method, amount, reference? }],
+ *   discount_amount?, loyalty_points_to_redeem?, status?: 'held', notes?
+ * }
  * Discounts / price overrides need the sales.discount permission; selling below a product's floor price needs products.manage.
  */
 exports.create = wrap(async (req, res) => {
@@ -47,12 +51,23 @@ exports.create = wrap(async (req, res) => {
   }
   const points = v.optInt(b.loyalty_points_to_redeem, 'loyalty_points_to_redeem', { min: 0 }) || 0;
 
+  // Customer identification: a saved customer OR a walk-in name. Never both.
+  const customerId = v.optId(b.customer_id, 'customer_id');
+  let customerName = null;
+  if (b.customer_name !== undefined && b.customer_name !== null) {
+    customerName = v.str(b.customer_name, 'customer_name', { max: 150 }).trim() || null;
+  }
+  if (customerId && customerName) {
+    throw new AppError('Provide either customer_id or customer_name, not both', 400, 'CUSTOMER_CONFLICT');
+  }
+
   // Attach to the cashier's open till session automatically.
   const register_session_id = v.optId(b.register_session_id, 'register_session_id')
     || ((await models.registers.getOpen(req.user.id)) || {}).id;
 
   const sale = await models.sales.createSale({
-    customer_id: v.optId(b.customer_id, 'customer_id'),
+    customer_id: customerId,
+    customer_name: customerName,
     location_id: v.optId(b.location_id, 'location_id'),
     register_session_id,
     status: b.status === 'held' ? 'held' : 'completed',

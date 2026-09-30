@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suppliers · HassDent Dental Supplies</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/pos.css">
+  <link rel="stylesheet" href="css/purchases.css">
+</head>
+<body data-page="suppliers">
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sb-scrim" id="sb-scrim"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+      <div class="title"><h1>Suppliers</h1><div class="sub">Who you buy from and what you owe them</div></div>
+      <div class="actions">
+        <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+        <div class="dropdown">
+          <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-label="Notifications">
+            <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span></button>
+          <div class="dropdown-menu dropdown-menu-end notif-menu">
+            <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+            <div class="notif-list" id="notif-list"></div>
+          </div>
+        </div>
+        <button class="btn-cta" id="btn-new" type="button" data-perm="suppliers.manage"><span class="txt">New supplier</span><span class="plus"><i class="ph-bold ph-plus"></i></span></button>
+      </div>
+    </header>
+
+    <div class="card-hd">
+      <div class="card-title-row flex-wrap">
+        <h2>All suppliers</h2><span class="count-pill" id="count" hidden></span>
+        <div class="seg" id="active-seg" role="group" aria-label="Status filter"><button type="button" data-a="true" class="on">Active</button><button type="button" data-a="false">Inactive</button><button type="button" data-a="">All</button></div>
+      </div>
+      <div class="filters" style="grid-template-columns:1fr">
+        <input id="f-q" class="form-control" type="search" placeholder="Search name, contact person or phone…" autocomplete="off">
+      </div>
+      <div id="list"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- add / edit -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content pay-modal">
+    <div class="modal-header border-0 pb-0 px-4 pt-4"><h2 class="h5 fw-bold m-0" id="f-title">New supplier</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body px-4">
+      <div class="hd-alert hd-alert-danger mb-3" id="f-err" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+      <div class="row g-3">
+        <div class="col-12"><label class="hd-label" for="f-name">Supplier name *</label><input id="f-name" class="form-control" maxlength="150"></div>
+        <div class="col-md-6"><label class="hd-label" for="f-contact">Contact person</label><input id="f-contact" class="form-control" maxlength="100"></div>
+        <div class="col-md-6"><label class="hd-label" for="f-phone">Phone</label><input id="f-phone" class="form-control" maxlength="20" inputmode="tel" placeholder="0712 345 678"></div>
+        <div class="col-md-6"><label class="hd-label" for="f-email">Email</label><input id="f-email" class="form-control" type="email" maxlength="150"></div>
+        <div class="col-md-6"><label class="hd-label" for="f-kra">KRA PIN</label><input id="f-kra" class="form-control" maxlength="20"></div>
+        <div class="col-md-6"><label class="hd-label" for="f-terms">Payment terms</label><input id="f-terms" class="form-control" maxlength="100" placeholder="e.g. Net 30"></div>
+        <div class="col-md-6"><label class="hd-label" for="f-addr">Address</label><input id="f-addr" class="form-control"></div>
+        <div class="col-12"><label class="hd-label" for="f-notes">Notes</label><textarea id="f-notes" class="form-control" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer border-0 px-4 pb-4 pt-0"><button class="btn btn-hd btn-lg w-100" id="f-save" type="button"><span class="label">Save supplier</span></button></div>
+  </div></div>
+</div>
+
+<!-- detail -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"><div class="modal-content pay-modal"><div class="modal-body p-4" id="v-body"></div></div></div>
+</div>
+
+<!-- record payment -->
+<div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content pay-modal"><div class="modal-body p-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div><div class="text-muted small fw-semibold" id="p-name">Pay supplier</div><div class="pay-due" id="p-owed">KES 0.00</div><div class="text-muted small">currently owed</div></div>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="hd-alert hd-alert-danger mb-3" id="p-err" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+    <div class="methods" id="p-methods">
+      <button type="button" data-m="cash" class="on"><i class="ph-duotone ph-money"></i>Cash</button>
+      <button type="button" data-m="mpesa"><i class="ph-duotone ph-device-mobile"></i>M-Pesa</button>
+      <button type="button" data-m="bank_transfer"><i class="ph-duotone ph-bank"></i>Bank</button>
+      <button type="button" data-m="cheque"><i class="ph-duotone ph-note"></i>Cheque</button>
+    </div>
+    <label class="hd-label" for="p-amt">Amount (KES)</label>
+    <input id="p-amt" class="form-control mb-2" type="number" min="0.01" step="0.01" inputmode="decimal">
+    <div class="quick-amts mb-3" id="p-quick"></div>
+    <label class="hd-label" for="p-ref">Reference (optional)</label>
+    <input id="p-ref" class="form-control mb-3" maxlength="100" placeholder="M-Pesa code, cheque no. …">
+    <label class="hd-label" for="p-notes">Notes (optional)</label>
+    <input id="p-notes" class="form-control">
+    <button class="btn btn-hd btn-lg w-100 mt-3" id="p-save" type="button"><span class="label">Record payment</span></button>
+  </div></div></div>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/suppliers.js"></script>
+</body>
+</html>

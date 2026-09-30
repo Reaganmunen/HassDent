@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sales · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/sales.css">
+</head>
+<body data-page="sales">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <!-- ============ Top bar ============ -->
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title">
+          <h1>Sales</h1>
+          <div class="sub">Every sale, payment and return in one place</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+
+          <div class="dropdown">
+            <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+              <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notif-menu">
+              <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+              <div class="notif-list" id="notif-list"><div class="notif-empty">Loading…</div></div>
+            </div>
+          </div>
+
+          <a class="btn-cta" href="pos.html" data-perm="sales.create">
+            <span class="txt">New Sale</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
+          </a>
+        </div>
+      </header>
+
+      <!-- ============ Filters ============ -->
+      <div class="card-hd mb-3">
+        <div class="filters">
+          <div class="f-search">
+            <i class="ph-duotone ph-magnifying-glass"></i>
+            <input id="f-search" class="form-control" type="search" placeholder="Search sale number, customer or phone…" autocomplete="off">
+          </div>
+          <select id="f-status" class="form-select f-sel" aria-label="Sale status">
+            <option value="">All statuses</option>
+            <option value="completed">Completed</option>
+            <option value="held">Held</option>
+            <option value="voided">Voided</option>
+          </select>
+          <select id="f-pay" class="form-select f-sel" aria-label="Payment status">
+            <option value="">All payments</option>
+            <option value="paid">Paid</option>
+            <option value="partial">Part paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+          <div class="seg" id="range-seg" role="group" aria-label="Date range">
+            <button type="button" data-range="today">Today</button>
+            <button type="button" data-range="7">7 days</button>
+            <button type="button" data-range="30" class="on">30 days</button>
+            <button type="button" data-range="all">All</button>
+          </div>
+          <div class="f-dates">
+            <input id="f-from" class="form-control" type="date" aria-label="From date">
+            <span>to</span>
+            <input id="f-to" class="form-control" type="date" aria-label="To date">
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Table ============ -->
+      <div class="card-hd">
+        <div class="card-title-row">
+          <h2>Sales list</h2>
+          <span class="count-pill" id="total-pill">…</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl sales-tbl">
+            <thead>
+              <tr>
+                <th>Sale</th><th>Date</th><th>Customer</th><th>Cashier</th>
+                <th class="num">Total</th><th class="num">Paid</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div id="state"></div>
+        <div class="pager" id="pager" hidden>
+          <span id="pager-info"></span>
+          <div>
+            <button type="button" id="pg-prev" aria-label="Previous page"><i class="ph-bold ph-caret-left"></i></button>
+            <button type="button" id="pg-next" aria-label="Next page"><i class="ph-bold ph-caret-right"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Sale detail modal ============ -->
+  <div class="modal fade" id="saleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content sale-modal">
+        <div class="modal-body p-4" id="s-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-hd" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/sales.js"></script>
+</body>
+</html>

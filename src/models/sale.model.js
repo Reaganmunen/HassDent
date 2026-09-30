@@ -18,6 +18,8 @@ const catalog = require('./catalog.model');
  *  - Stock movements for a line carry source_type 'sale_item' / source_id = sale_items.id, so each
  *    line can be traced, voided or returned exactly.
  *  - Amounts are computed in integer cents.
+ *  - A sale is either for a saved customer (customer_id) or a walk-in with a free-text name
+ *    (customer_name). Never both — enforced by chk_sales_customer_exclusive on the sales table.
  */
 
 const METHODS = ['cash', 'mpesa', 'card', 'bank_transfer'];
@@ -152,12 +154,15 @@ async function finalise(c, sale, items, { payments, customer, settings, userId }
 // ------------------------------------------------------------------ create
 /**
  * input: {
- *   customer_id?, location_id?, register_session_id?, status?: 'completed'|'held', notes?, sold_by,
+ *   customer_id?, customer_name?, location_id?, register_session_id?, status?: 'completed'|'held', notes?, sold_by,
  *   items: [{ product_id, quantity, unit_price?, discount_amount? }],
  *   discount_amount?, loyalty_points_to_redeem?,
  *   payments: [{ method, amount, reference?, mpesa_transaction_id?, status?: 'pending' }],
  *   allow_price_override?, allow_below_min?   // set by the controller from the caller's permissions
  * }
+ *
+ * customer_id and customer_name are mutually exclusive. If neither is given, the sale is an
+ * anonymous walk-in (name is not printed on the receipt).
  */
 async function createSale(input, db) {
   if (!Array.isArray(input.items) || !input.items.length) throw new AppError('A sale needs at least one item', 400, 'NO_ITEMS');
@@ -174,14 +179,22 @@ async function createSale(input, db) {
       customer = cu;
     }
 
+    // Walk-in name: only stored when there is no saved customer attached.
+    let walkinName = null;
+    if (!customer && input.customer_name) {
+      const trimmed = String(input.customer_name).trim();
+      if (trimmed.length > 150) throw new AppError('Customer name is too long (max 150)', 400, 'CUSTOMER_NAME_TOO_LONG');
+      walkinName = trimmed || null;
+    }
+
     const lines = await priceLines(c, input.items, customer, input);
     const t = computeTotals(lines, input, customer, settings);
 
     const { rows: [sale] } = await query(
-      `INSERT INTO sales (customer_id, register_session_id, location_id, status, subtotal, discount_amount,
+      `INSERT INTO sales (customer_id, customer_name, register_session_id, location_id, status, subtotal, discount_amount,
                           loyalty_points_used, loyalty_discount, tax_total, total, notes, sold_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [customer ? customer.id : null, input.register_session_id || null, location_id, status,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [customer ? customer.id : null, walkinName, input.register_session_id || null, location_id, status,
         fromCents(t.subtotal), fromCents(t.saleDiscount), t.points, fromCents(t.loyaltyDiscount), fromCents(t.tax), fromCents(t.total),
         input.notes || null, input.sold_by || null], c);
 
@@ -367,8 +380,19 @@ async function getReturn(id, db) {
 // ------------------------------------------------------------------ reading
 async function getById(id, db) {
   const { rows: [sale] } = await query(
-    `SELECT s.*, c.full_name AS customer_name, c.phone AS customer_phone, u.name AS sold_by_name
-       FROM sales s LEFT JOIN customers c ON c.id = s.customer_id LEFT JOIN users u ON u.id = s.sold_by WHERE s.id = $1`, [id], db);
+    `SELECT s.id, s.sale_number, s.customer_id,
+            COALESCE(c.full_name, s.customer_name) AS customer_name,
+            c.phone AS customer_phone,
+            s.register_session_id, s.location_id, s.status,
+            s.subtotal, s.discount_amount, s.loyalty_points_used, s.loyalty_discount,
+            s.tax_total, s.total, s.amount_paid, s.payment_status, s.notes,
+            s.sold_by, s.sold_at, s.voided_by, s.voided_at, s.void_reason,
+            s.created_at, s.updated_at,
+            u.name AS sold_by_name
+       FROM sales s
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN users u ON u.id = s.sold_by
+      WHERE s.id = $1`, [id], db);
   if (!sale) throw notFound('Sale');
   const [items, payments, returns] = await Promise.all([
     query(`SELECT i.*, p.name AS product_name, p.sku FROM sale_items i JOIN products p ON p.id = i.product_id WHERE i.sale_id = $1 ORDER BY i.id`, [id], db),
@@ -385,13 +409,25 @@ async function list({ from, to, customer_id, status, payment_status, search, lim
   if (customer_id) { params.push(customer_id); where.push(`s.customer_id = $${params.length}`); }
   if (status) { params.push(status); where.push(`s.status = $${params.length}`); }
   if (payment_status) { params.push(payment_status); where.push(`s.payment_status = $${params.length}`); }
-  if (search) { params.push(`%${search}%`); where.push(`(s.sale_number ILIKE $${params.length} OR c.full_name ILIKE $${params.length} OR c.phone ILIKE $${params.length})`); }
+  if (search) {
+    params.push(`%${search}%`);
+    where.push(`(s.sale_number ILIKE $${params.length}
+              OR c.full_name ILIKE $${params.length}
+              OR s.customer_name ILIKE $${params.length}
+              OR c.phone ILIKE $${params.length})`);
+  }
   params.push(limit, offset);
   const { rows } = await query(
     `SELECT s.id, s.sale_number, s.status, s.payment_status, s.total, s.amount_paid, s.sold_at,
-            c.full_name AS customer_name, u.name AS sold_by_name, COUNT(*) OVER()::INT AS total_count
-       FROM sales s LEFT JOIN customers c ON c.id = s.customer_id LEFT JOIN users u ON u.id = s.sold_by
-      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY s.sold_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params, db);
+            COALESCE(c.full_name, s.customer_name) AS customer_name,
+            u.name AS sold_by_name,
+            COUNT(*) OVER()::INT AS total_count
+       FROM sales s
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN users u ON u.id = s.sold_by
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+      ORDER BY s.sold_at DESC, s.id DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}`, params, db);
   return { items: rows.map(({ total_count, ...r }) => r), total: rows[0] ? rows[0].total_count : 0 };
 }
 

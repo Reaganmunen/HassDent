@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expenses · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/expenses.css">
+</head>
+<body data-page="expenses">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <!-- ============ Top bar ============ -->
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title">
+          <h1>Expenses</h1>
+          <div class="sub" id="greeting">&nbsp;</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh data"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+
+          <div class="dropdown">
+            <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+              <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notif-menu">
+              <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+              <div class="notif-list" id="notif-list"><div class="notif-empty">Loading…</div></div>
+            </div>
+          </div>
+
+          <a class="btn-cta" href="pos.html" data-perm="sales.create">
+            <span class="txt">New Sale</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
+          </a>
+        </div>
+      </header>
+
+      <!-- ============ Content ============ -->
+      <div class="row grid-gap">
+
+        <!-- ===== Summary strip ===== -->
+        <div class="col-12" id="summary-strip" data-perm="expenses.manage reports.view">
+          <div class="row grid-gap">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="card-hd stat dark">
+                <div class="top"><span class="s-ico"><i class="ph-duotone ph-receipt"></i></span><span class="s-label">Period total</span></div>
+                <div class="s-value" id="sum-total">KES 0</div>
+                <div class="s-foot" id="sum-period">This month</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="card-hd stat">
+                <div class="top"><span class="s-ico"><i class="ph-duotone ph-list-checks"></i></span><span class="s-label">Entries</span></div>
+                <div class="s-value" id="sum-entries">0</div>
+                <div class="s-foot">Recorded in this period</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="card-hd stat amber">
+                <div class="top"><span class="s-ico"><i class="ph-duotone ph-tag"></i></span><span class="s-label">Top category</span></div>
+                <div class="s-value" id="sum-top-cat">—</div>
+                <div class="s-foot" id="sum-top-amt">—</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="card-hd stat sky">
+                <div class="top"><span class="s-ico"><i class="ph-duotone ph-chart-pie-slice"></i></span><span class="s-label">Daily average</span></div>
+                <div class="s-value" id="sum-avg">KES 0</div>
+                <div class="s-foot">Across the period</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Add expense card ===== -->
+        <div class="col-12" id="add-expense-card">
+          <div class="card-hd form-card">
+            <div class="card-title-row">
+              <h2><i class="ph-duotone ph-plus-circle" style="margin-right: 8px;"></i>Record an expense</h2>
+            </div>
+
+            <form id="expense-form" autocomplete="off">
+              <div class="form-row">
+                <div class="field">
+                  <label for="category_id">Category *</label>
+                  <select id="category_id" required>
+                    <option value="">— Select a category —</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="amount">Amount (KES) *</label>
+                  <input type="number" id="amount" min="0.01" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="field">
+                  <label for="expense_date">Date</label>
+                  <input type="date" id="expense_date">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field">
+                  <label for="method">Payment method</label>
+                  <select id="method">
+                    <option value="cash">Cash</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="card">Card</option>
+                    <option value="bank_transfer">Bank transfer</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="reference">Reference</label>
+                  <input type="text" id="reference" placeholder="Receipt no., M-Pesa code, etc.">
+                </div>
+                <div class="field" style="flex: 2 1 260px;">
+                  <label for="description">Description</label>
+                  <input type="text" id="description" placeholder="What was this for?">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field" style="flex: 3 1 320px;">
+                  <label for="receipt_url">Receipt link (optional)</label>
+                  <input type="url" id="receipt_url" placeholder="https://…">
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-custom" id="btn-save">
+                  <i class="ph-bold ph-check"></i> Save expense
+                </button>
+                <button type="reset" class="btn-ghost" id="btn-reset">Clear</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ===== Filters + list ===== -->
+        <div class="col-12">
+          <div class="card-hd">
+            <div class="card-title-row" style="flex-wrap: wrap; gap: 10px;">
+              <h2><i class="ph-duotone ph-list" style="margin-right: 8px;"></i>Expenses</h2>
+              <span class="count-pill" id="expense-count">0</span>
+
+              <div class="filter-row">
+                <div class="field-inline">
+                  <label for="filter-from">From</label>
+                  <input type="date" id="filter-from">
+                </div>
+                <div class="field-inline">
+                  <label for="filter-to">To</label>
+                  <input type="date" id="filter-to">
+                </div>
+                <div class="field-inline">
+                  <label for="filter-category">Category</label>
+                  <select id="filter-category">
+                    <option value="">All</option>
+                  </select>
+                </div>
+                <button class="btn-ghost btn-sm" id="btn-clear-filters" type="button">Clear</button>
+              </div>
+            </div>
+
+            <div id="expense-list-body">
+              <div class="sk sk-line"></div>
+              <div class="sk sk-line"></div>
+              <div class="sk sk-line"></div>
+              <div class="sk sk-line"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.row -->
+    </div><!-- /.main -->
+  </div><!-- /.app -->
+
+  <!-- toast -->
+  <div class="toast-msg" id="toast"><i class="ph-duotone ph-check-circle"></i><span id="toast-text">Saved</span></div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/expenses.js"></script>
+</body>
+</html>

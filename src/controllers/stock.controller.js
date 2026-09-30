@@ -67,6 +67,11 @@ exports.startTake = wrap(async (req, res) => {
   created(res, await models.stock.startStockTake({ location_id, notes: b.notes, user_id: req.user.id }));
 });
 
+exports.takes = wrap(async (req, res) => {
+  const { limit, offset } = paginate(req.query);
+  ok(res, await models.stock.listStockTakes({ status: req.query.status, limit, offset }));
+});
+
 exports.getTake = wrap(async (req, res) => ok(res, await models.stock.getStockTake(v.id(req.params.id))));
 
 exports.recordCount = wrap(async (req, res) => {

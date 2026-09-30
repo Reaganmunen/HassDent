@@ -1,0 +1,27 @@
+/* Purchases page (builds on dashboard.css cards/tables/pills and pos.css search) */
+.filters { display: grid; grid-template-columns: 1fr 220px; gap: 10px; margin-bottom: 14px; }
+.filters .form-control, .filters .form-select { height: 46px; border-radius: 14px; border: 1.5px solid var(--hd-line); background-color: #fafaf8; font-weight: 600; font-size: .86rem; }
+.filters .form-control:focus, .filters .form-select:focus, .modal .form-control:focus, .modal .form-select:focus { border-color: var(--hd-ink); box-shadow: 0 0 0 4px rgba(216, 240, 60, .45); }
+.modal .form-control, .modal .form-select { border-radius: 12px; border: 1.5px solid var(--hd-line); font-weight: 600; font-size: .86rem; }
+#status-seg { margin-left: auto; overflow-x: auto; max-width: 100%; }
+#status-seg button { white-space: nowrap; }
+#tabs.ms-0 { margin-left: 0; }
+.pill.draft { background: #f0f0ec; color: var(--hd-ink); }
+.pill.ordered { background: #dff3f7; color: #1d6b8a; }
+.tbl tr.row-link { cursor: pointer; }
+.tbl tr.row-link:hover td { background: #fafaf8; }
+.lines-tbl td { padding: 8px 6px; }
+.lines-tbl .form-control { height: 38px; padding: 0 10px; }
+.lines-tbl .pname b { display: block; font-size: .84rem; }
+.lines-tbl .pname small { color: var(--hd-muted); font-weight: 500; }
+.lines-tbl .rm { border: 0; background: none; color: #b3262b; font-size: 1.2rem; }
+.lines-tbl.po-mode .rcv { display: none; }
+.pos-search .cust-res { top: 60px; max-height: 260px; overflow-y: auto; }
+.v-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.v-head h2 { font-size: 1.25rem; font-weight: 800; margin: 0; }
+.v-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.v-meta div { background: #f7f7f4; border-radius: 14px; padding: 10px 14px; }
+.v-meta small { display: block; color: var(--hd-muted); font-weight: 600; font-size: .72rem; }
+.v-meta b { font-size: .9rem; }
+.v-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+@media (max-width: 575.98px) { .filters { grid-template-columns: 1fr; } }

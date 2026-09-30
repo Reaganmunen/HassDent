@@ -202,6 +202,20 @@ async function startStockTake({ location_id, notes, user_id }, db) {
   });
 }
 
+async function listStockTakes({ status, limit = 50, offset = 0 } = {}, db) {
+  const params = []; const where = [];
+  if (status) { params.push(status); where.push(`s.status = $${params.length}`); }
+  params.push(limit, offset);
+  const { rows } = await query(
+    `SELECT s.*, l.name AS location, u.name AS started_by_name,
+            COUNT(i.id)::INT AS item_count, COUNT(i.counted_qty)::INT AS counted_count
+       FROM stock_takes s JOIN locations l ON l.id = s.location_id
+       LEFT JOIN users u ON u.id = s.started_by LEFT JOIN stock_take_items i ON i.stock_take_id = s.id
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+      GROUP BY s.id, l.name, u.name ORDER BY s.started_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params, db);
+  return rows;
+}
+
 async function getStockTake(id, db) {
   const { rows: [st] } = await query('SELECT * FROM stock_takes WHERE id = $1', [id], db);
   if (!st) throw notFound('Stock take');
@@ -247,5 +261,5 @@ async function completeStockTake(id, user_id, db) {
 module.exports = {
   applyMovement, allocateFEFO, expandToBatches, findOrCreateBatch, listBatches,
   getLevels, listMovements, lowStock, expiring, valuation, integrityCheck,
-  adjust, transfer, startStockTake, getStockTake, recordCount, completeStockTake,
+  adjust, transfer, startStockTake, listStockTakes, getStockTake, recordCount, completeStockTake,
 };

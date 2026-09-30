@@ -5,7 +5,7 @@ const RANGE = (col, a, b) =>
   `(${a}::date IS NULL OR ${col} >= (${a}::date)::timestamp AT TIME ZONE 'Africa/Nairobi')
    AND (${b}::date IS NULL OR ${col} < ((${b}::date) + 1)::timestamp AT TIME ZONE 'Africa/Nairobi')`;
 
-/** Headline numbers for a period. Profit is ESTIMATED: item margins (net of returns) minus sale-level discounts. */
+/** Headline numbers for a period. Profit = money in (line_total) minus cost of goods, minus sale-level discounts. */
 async function salesSummary({ from, to } = {}, db) {
   const p = [from || null, to || null];
   const { rows: [s] } = await query(
@@ -14,9 +14,11 @@ async function salesSummary({ from, to } = {}, db) {
        FROM sales WHERE status = 'completed' AND ${RANGE('sold_at', '$1', '$2')}`, p, db);
   const { rows: [r] } = await query(
     `SELECT COALESCE(SUM(refund_amount),0) AS refunds FROM sale_returns WHERE ${RANGE('processed_at', '$1', '$2')}`, p, db);
+  // Profit = what the customer paid (line_total) minus what we paid for the goods.
+  // VAT is intentionally NOT subtracted — the shop is not VAT-registered.
   const { rows: [i] } = await query(
     `SELECT COALESCE(SUM(
-              (si.line_total - si.tax_amount) * (si.quantity - si.quantity_returned) / si.quantity
+              si.line_total * (si.quantity - si.quantity_returned) / si.quantity
               - si.unit_cost * (si.quantity - si.quantity_returned)), 0)::NUMERIC(12,2) AS item_profit
        FROM sale_items si JOIN sales sa ON sa.id = si.sale_id
       WHERE sa.status = 'completed' AND ${RANGE('sa.sold_at', '$1', '$2')}`, p, db);
