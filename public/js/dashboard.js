@@ -16,6 +16,37 @@
     fmt.dayLabel(fmt.today(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   if (!can('reports.view')) $('quick-col').hidden = false;
 
+  // ------------------------------------------------------------------ catalogue tiles
+  function initCatalogue() {
+    const col = $('catalogue-col');
+    if (!col) return;
+    const items = col.querySelectorAll('.quick.catalogue a[data-perm]');
+    let visible = 0;
+    items.forEach((a) => {
+      if (can(a.dataset.perm)) visible++;
+      else a.hidden = true;
+    });
+    col.hidden = visible === 0;
+
+    // Warn if critical defaults are missing (affects POS + stock deduction).
+    if (visible > 0) {
+      Promise.all([
+        can('settings.manage') ? api('/tax-rates').catch(() => []) : Promise.resolve([]),
+        can('settings.manage') ? api('/locations').catch(() => []) : Promise.resolve([]),
+      ]).then(([taxes, locs]) => {
+        const missing = [];
+        if (Array.isArray(taxes) && taxes.length && !taxes.some((t) => t.is_default)) missing.push('default tax rate');
+        if (Array.isArray(locs) && locs.length && !locs.some((l) => l.is_default && l.is_active)) missing.push('default location');
+        if (!missing.length) return;
+        const pill = $('cat-count');
+        if (!pill) return;
+        pill.hidden = false;
+        pill.textContent = `Set ${missing.join(' & ')}`;
+      });
+    }
+  }
+  initCatalogue();
+
   // ------------------------------------------------------------------ small building blocks
   const stateBox = (icon, text, retry) =>
     `<div class="state-box"><i class="ph-duotone ${icon}"></i><div>${esc(text)}</div>${retry ? '<button class="retry" type="button">Try again</button>' : ''}</div>`;

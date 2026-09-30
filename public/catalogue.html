@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalogue · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+
+  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/catalogue.css">
+</head>
+<body data-page="catalogue">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title">
+          <h1>Catalogue</h1>
+          <div class="sub" id="cat-sub">Lookup tables used across the system</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh data"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+        </div>
+      </header>
+
+      <div class="cat-tabs" id="cat-tabs" role="tablist" aria-label="Catalogue sections"></div>
+
+      <div class="cat-panel card-hd" id="cat-panel">
+        <div class="cat-toolbar">
+          <div class="cat-search">
+            <i class="ph-duotone ph-magnifying-glass"></i>
+            <input type="search" id="cat-search" placeholder="Search…" autocomplete="off">
+          </div>
+          <button class="btn-cta" id="cat-new" type="button" hidden>
+            <span class="txt">Add</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
+          </button>
+        </div>
+        <div id="cat-body"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- shared modal for create / edit -->
+  <div class="modal fade" id="cat-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="cat-form">
+          <div class="modal-header"><h5 class="modal-title" id="cat-modal-title">Add</h5></div>
+          <div class="modal-body" id="cat-fields"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-dark" id="cat-save">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/catalogue.js"></script>
+</body>
+</html>

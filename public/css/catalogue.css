@@ -1,0 +1,47 @@
+/* Catalogue page: tabbed lookup management */
+
+.cat-tabs {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 6px; margin-bottom: 14px;
+  background: var(--hd-card); border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, .03);
+  overflow-x: auto;
+}
+.cat-tabs button {
+  border: 0; background: transparent;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px; border-radius: 12px;
+  font-size: .84rem; font-weight: 700; color: var(--hd-muted);
+  white-space: nowrap; transition: .15s;
+}
+.cat-tabs button i { font-size: 1.15rem; }
+.cat-tabs button:hover { background: #f4f4ef; color: var(--hd-ink); }
+.cat-tabs button[aria-selected="true"] { background: var(--hd-ink); color: #fff; }
+
+.cat-panel { padding: 20px; }
+.cat-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.cat-search { position: relative; flex: 1; max-width: 360px; }
+.cat-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--hd-muted); font-size: 1.1rem; }
+.cat-search input {
+  width: 100%; border: 1px solid var(--hd-line); background: #fafaf8;
+  border-radius: 12px; padding: 9px 12px 9px 38px;
+  font-size: .85rem; font-weight: 600; outline: none; transition: .15s;
+}
+.cat-search input:focus { background: #fff; border-color: var(--hd-lime-deep); box-shadow: 0 0 0 3px rgba(216, 240, 60, .25); }
+
+.cat-panel .btn-cta { margin-left: auto; }
+
+/* row action buttons */
+.row-act {
+  border: 0; background: transparent; color: var(--hd-muted);
+  width: 32px; height: 32px; border-radius: 9px;
+  display: inline-grid; place-items: center; font-size: 1.05rem;
+  transition: .15s;
+}
+.row-act:hover { background: #f4f4ef; color: var(--hd-ink); }
+.row-act.on { color: #b8860b; }
+.row-act.danger:hover { background: var(--hd-danger-soft); color: #b3262b; }
+
+/* reuse the dashboard's table + skeleton + state-box look inside the panel */
+.cat-panel .tbl { font-size: .85rem; }
+.cat-panel .state-box { padding: 40px 10px; }

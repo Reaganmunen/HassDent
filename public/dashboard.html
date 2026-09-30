@@ -63,6 +63,26 @@
           </div>
         </div>
 
+        <!-- catalogue: lookup-table management, shown only to users who can edit at least one -->
+        <div class="col-12" id="catalogue-col" hidden>
+          <div class="card-hd">
+            <div class="card-title-row">
+              <h2>Catalogue</h2>
+              <span class="count-pill warn" id="cat-count" hidden></span>
+              <a class="see-all" href="catalogue.html" data-perm="products.view">Manage all <i class="ph-bold ph-arrow-right"></i></a>
+            </div>
+            <div class="quick catalogue" id="catalogue-grid">
+              <a href="catalogue.html#categories"         data-perm="products.manage"><i class="ph-duotone ph-tree-structure"></i>Categories</a>
+              <a href="catalogue.html#brands"             data-perm="products.manage"><i class="ph-duotone ph-tag"></i>Brands</a>
+              <a href="catalogue.html#units"              data-perm="products.manage"><i class="ph-duotone ph-ruler"></i>Units</a>
+              <a href="catalogue.html#tax-rates"          data-perm="settings.manage"><i class="ph-duotone ph-percent"></i>Tax rates</a>
+              <a href="catalogue.html#customer-groups"    data-perm="settings.manage"><i class="ph-duotone ph-users-four"></i>Customer groups</a>
+              <a href="catalogue.html#locations"          data-perm="settings.manage"><i class="ph-duotone ph-storefront"></i>Locations</a>
+              <a href="catalogue.html#expense-categories" data-perm="expenses.manage"><i class="ph-duotone ph-receipt-x"></i>Expense categories</a>
+            </div>
+          </div>
+        </div>
+
         <!-- stat cards -->
         <div class="col-12 col-sm-6 col-xl-3" data-perm="reports.view">
           <div class="card-hd stat dark" id="stat-sales">

@@ -11,3 +11,4 @@ const { pool } = require('../src/config/db');
   console.log('Database reset and schema loaded.');
   await pool.end();
 })().catch((e) => { console.error(e); process.exit(1); });
+

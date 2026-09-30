@@ -115,4 +115,16 @@
 .quick a:hover { background: var(--hd-lime-soft); border-color: var(--hd-lime-deep); text-decoration: none; transform: translateY(-1px); }
 .quick a i { font-size: 1.5rem; }
 
+/* catalogue tiles: denser than the top quick-actions row */
+.quick.catalogue {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+.quick.catalogue a {
+  padding: 12px;
+  border-radius: 14px;
+  font-size: .82rem;
+}
+.quick.catalogue a i { font-size: 1.35rem; }
+
 [data-perm][hidden] { display: none !important; }

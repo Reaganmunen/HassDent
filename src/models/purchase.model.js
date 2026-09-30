@@ -94,6 +94,14 @@ async function receiveGoods({ purchase_order_id, supplier_id, location_id, suppl
       const { rows: [p] } = await query('SELECT id, name, tracks_expiry, cost_price FROM products WHERE id = $1', [it.product_id], c);
       if (!p) throw notFound('Product');
 
+      // Guard: a batch/expiry on a product that doesn't track expiry would be silently discarded
+      // (no batch row, so it could never appear in expiring-batch lists or notifications).
+      if (!p.tracks_expiry && (it.batch_number || it.expiry_date)) {
+        throw new AppError(
+          `"${p.name}" does not track expiry. Enable expiry tracking on the product before receiving it with a batch number or expiry date`,
+          422, 'EXPIRY_NOT_TRACKED');
+      }
+
       let batchId = null;
       if (p.tracks_expiry) {
         if (!it.batch_number || !it.expiry_date) {
