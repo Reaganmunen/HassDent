@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="/vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/shell.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body data-page="dashboard">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="sb-scrim" id="sb-scrim"></div>
+
+    <div class="main">
+      <!-- ============ Top bar ============ -->
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+        <div class="title">
+          <h1>Dashboard</h1>
+          <div class="sub" id="greeting">&nbsp;</div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="btn-refresh" type="button" title="Refresh" aria-label="Refresh data"><i class="ph-duotone ph-arrows-clockwise"></i></button>
+
+          <div class="dropdown">
+            <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications">
+              <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notif-menu">
+              <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+              <div class="notif-list" id="notif-list"><div class="notif-empty">Loading…</div></div>
+            </div>
+          </div>
+
+          <a class="btn-cta" href="/pos.html" data-perm="sales.create">
+            <span class="txt">New Sale</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
+          </a>
+        </div>
+      </header>
+
+      <!-- ============ Content ============ -->
+      <div class="row grid-gap">
+
+        <!-- quick actions: only for people without report access (e.g. cashiers) -->
+        <div class="col-12" id="quick-col" hidden>
+          <div class="card-hd">
+            <div class="card-title-row"><h2>Quick actions</h2></div>
+            <div class="quick">
+              <a href="/pos.html" data-perm="sales.create"><i class="ph-duotone ph-cash-register"></i>New sale</a>
+              <a href="/customers.html" data-perm="customers.view"><i class="ph-duotone ph-users-three"></i>Customers</a>
+              <a href="/products.html" data-perm="products.view"><i class="ph-duotone ph-package"></i>Products</a>
+              <a href="/stock.html" data-perm="stock.view"><i class="ph-duotone ph-stack"></i>Stock levels</a>
+              <a href="/purchases.html" data-perm="purchases.view"><i class="ph-duotone ph-truck"></i>Purchases</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- stat cards -->
+        <div class="col-12 col-sm-6 col-xl-3" data-perm="reports.view">
+          <div class="card-hd stat dark" id="stat-sales">
+            <div class="top"><span class="s-ico"><i class="ph-duotone ph-coins"></i></span><span class="s-label">Today's sales</span></div>
+            <div class="s-value sk" data-v>KES 00,000</div>
+            <div class="s-foot sk" data-f>0 sales today</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3" data-perm="reports.view">
+          <div class="card-hd stat" id="stat-stock">
+            <div class="top"><span class="s-ico"><i class="ph-duotone ph-package"></i></span><span class="s-label">Stock value</span></div>
+            <div class="s-value sk" data-v>KES 00,000</div>
+            <div class="s-foot sk" data-f>At cost price</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3" data-perm="reports.view">
+          <div class="card-hd stat amber" id="stat-credit">
+            <div class="top"><span class="s-ico"><i class="ph-duotone ph-hand-coins"></i></span><span class="s-label">Credit outstanding</span></div>
+            <div class="s-value sk" data-v>KES 00,000</div>
+            <div class="s-foot sk" data-f>Awaiting payment</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3" data-perm="reports.view">
+          <div class="card-hd stat sky" id="stat-customers">
+            <div class="top"><span class="s-ico"><i class="ph-duotone ph-users-three"></i></span><span class="s-label">Active customers</span></div>
+            <div class="s-value sk" data-v>0,000</div>
+            <div class="s-foot sk" data-f>On your books</div>
+          </div>
+        </div>
+
+        <!-- sales trend + payment mix -->
+        <div class="col-12 col-xl-8" data-perm="reports.view">
+          <div class="card-hd">
+            <div class="card-title-row">
+              <h2>Sales trend</h2>
+              <div class="seg" id="range-seg" role="group" aria-label="Chart range">
+                <button type="button" data-range="7">7 days</button>
+                <button type="button" data-range="30" class="on">30 days</button>
+              </div>
+            </div>
+            <div id="chart-kpis" class="chart-kpis"></div>
+            <div id="chart-box" class="chart-box"><div class="sk sk-line" style="height:230px;margin:6px 0"></div></div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4" data-perm="reports.view">
+          <div class="card-hd">
+            <div class="card-title-row"><h2>Payment methods</h2><span class="count-pill" id="pay-period">This month</span></div>
+            <div id="pay-body"><div class="sk sk-line" style="height:170px;width:170px;border-radius:50%;margin:8px auto"></div></div>
+          </div>
+        </div>
+
+        <!-- recent sales + top products -->
+        <div class="col-12 col-xl-7" data-perm="sales.view">
+          <div class="card-hd">
+            <div class="card-title-row"><h2>Recent sales</h2><a class="see-all" href="/sales.html">See all <i class="ph-bold ph-arrow-right"></i></a></div>
+            <div id="sales-body"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-5" data-perm="reports.view">
+          <div class="card-hd">
+            <div class="card-title-row"><h2>Top products</h2><span class="count-pill">30 days</span></div>
+            <div id="top-body"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+          </div>
+        </div>
+
+        <!-- stock alerts -->
+        <div class="col-12 col-xl-6" data-perm="stock.view">
+          <div class="card-hd">
+            <div class="card-title-row"><h2>Low stock</h2><span class="count-pill warn" id="low-count" hidden></span><a class="see-all" href="/stock.html">Manage <i class="ph-bold ph-arrow-right"></i></a></div>
+            <div id="low-body"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+          </div>
+        </div>
+        <div class="col-12 col-xl-6" data-perm="stock.view">
+          <div class="card-hd">
+            <div class="card-title-row"><h2>Expiring batches</h2><span class="count-pill bad" id="exp-count" hidden></span><a class="see-all" href="/stock.html">Manage <i class="ph-bold ph-arrow-right"></i></a></div>
+            <div id="exp-body"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/shell.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

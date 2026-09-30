@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · HassDent Dental Supplies</title>
+  <meta name="theme-color" content="#1a1a1c">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="/vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <main class="auth-shell">
+    <div class="auth-card">
+
+      <!-- ============ Brand panel ============ -->
+      <aside class="auth-aside" aria-hidden="true">
+        <span class="aside-pill"><i class="ph-bold ph-tooth"></i>Inventory · POS · M-Pesa</span>
+
+        <div>
+          <h2 class="aside-title">Every supply, sale and <span>shelf</span> in one place.</h2>
+          <p class="aside-sub mt-3">Manage stock, batches and expiry dates, ring up sales and keep your dental supply business running smoothly.</p>
+        </div>
+
+        <div class="aside-preview">
+          <div class="preview-head">
+            <b>Stock volume vs consume rate</b>
+            <span class="preview-chip"><i class="ph-bold ph-trend-up"></i>Live</span>
+          </div>
+          <svg viewBox="0 0 320 110" role="img" aria-label="Decorative chart">
+            <defs>
+              <linearGradient id="fillLime" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#d8f03c" stop-opacity=".38"/>
+                <stop offset="1" stop-color="#d8f03c" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g stroke="rgba(255,255,255,.08)" stroke-width="1">
+              <line x1="0" y1="20" x2="320" y2="20"/><line x1="0" y1="50" x2="320" y2="50"/><line x1="0" y1="80" x2="320" y2="80"/>
+            </g>
+            <path d="M0 84 C24 78 38 60 62 62 S104 88 132 70 S176 30 204 40 S252 64 276 34 S304 22 320 18 L320 110 L0 110 Z" fill="url(#fillLime)"/>
+            <path d="M0 84 C24 78 38 60 62 62 S104 88 132 70 S176 30 204 40 S252 64 276 34 S304 22 320 18" fill="none" stroke="#d8f03c" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="204" cy="40" r="5" fill="#1a1a1c" stroke="#d8f03c" stroke-width="2.5"/>
+          </svg>
+        </div>
+
+        <ul class="aside-features">
+          <li>
+            <span class="ico"><i class="ph-duotone ph-package"></i></span>
+            <div><b>Batch &amp; expiry tracking</b><small>Know what to sell first and what to restock</small></div>
+          </li>
+          <li>
+            <span class="ico"><i class="ph-duotone ph-cash-register"></i></span>
+            <div><b>Fast point of sale</b><small>Cash, credit and M-Pesa in a single checkout</small></div>
+          </li>
+          <li>
+            <span class="ico"><i class="ph-duotone ph-chart-line-up"></i></span>
+            <div><b>Reports that make sense</b><small>Sales, profit and stock movement at a glance</small></div>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- ============ Form panel ============ -->
+      <section class="auth-main">
+        <div class="auth-form-wrap">
+          <img class="auth-logo" src="/img/logo.png" alt="HassDent Dental Supplies" width="150" height="120">
+
+          <!-- Sign in -->
+          <div class="auth-view" id="view-login">
+            <div class="auth-head">
+              <h1>Welcome back</h1>
+              <p>Sign in to <b>HassDent Dental Supplies</b></p>
+            </div>
+
+            <div class="hd-alert hd-alert-danger mb-3" id="login-alert" role="alert" hidden>
+              <i class="ph-duotone ph-warning-circle"></i><span></span>
+            </div>
+
+            <form id="login-form" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label class="hd-label" for="login-email">Email address</label>
+                <div class="hd-field">
+                  <i class="ph-duotone ph-envelope-simple field-icon"></i>
+                  <input type="email" class="form-control" id="login-email" name="email" placeholder="you@hassdent.co.ke" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                  <div class="invalid-feedback">Enter a valid email address.</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="hd-label" for="login-password">Password</label>
+                <div class="hd-field has-toggle">
+                  <i class="ph-duotone ph-lock-key field-icon"></i>
+                  <input type="password" class="form-control" id="login-password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                  <button type="button" class="toggle-visibility" data-toggle-password="login-password" aria-label="Show password" aria-pressed="false">
+                    <i class="ph-duotone ph-eye"></i>
+                  </button>
+                  <div class="invalid-feedback">Enter your password.</div>
+                </div>
+              </div>
+
+              <div class="auth-link-row mb-4">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="checkbox" id="login-remember" checked>
+                  <label class="form-check-label" for="login-remember">Keep me signed in</label>
+                </div>
+                <a href="#forgot" data-view="forgot">Forgot password?</a>
+              </div>
+
+              <button type="submit" class="btn btn-hd btn-lg w-100" id="login-submit">
+                <span class="label">Sign in</span>
+                <span class="btn-icon"><i class="ph-bold ph-arrow-right"></i></span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Forgot password -->
+          <div class="auth-view" id="view-forgot" hidden>
+            <div class="auth-head">
+              <span class="head-ico"><i class="ph-duotone ph-key"></i></span>
+              <h1>Reset your password</h1>
+              <p>Enter your work email and we'll send you a reset link.</p>
+            </div>
+
+            <div class="hd-alert hd-alert-danger mb-3" id="forgot-alert" role="alert" hidden>
+              <i class="ph-duotone ph-warning-circle"></i><span></span>
+            </div>
+            <div class="hd-alert hd-alert-success mb-3" id="forgot-success" role="status" hidden>
+              <i class="ph-duotone ph-check-circle"></i><span></span>
+            </div>
+
+            <form id="forgot-form" class="needs-validation" novalidate>
+              <div class="mb-4">
+                <label class="hd-label" for="forgot-email">Email address</label>
+                <div class="hd-field">
+                  <i class="ph-duotone ph-envelope-simple field-icon"></i>
+                  <input type="email" class="form-control" id="forgot-email" name="email" placeholder="you@hassdent.co.ke" autocomplete="email" autocapitalize="none" spellcheck="false" required>
+                  <div class="invalid-feedback">Enter a valid email address.</div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-hd btn-lg w-100" id="forgot-submit">
+                <span class="label">Send reset link</span>
+                <span class="btn-icon"><i class="ph-bold ph-paper-plane-tilt"></i></span>
+              </button>
+            </form>
+            <div class="text-center mt-4">
+              <a href="#login" class="auth-back" data-view="login"><i class="ph-bold ph-arrow-left"></i>Back to sign in</a>
+            </div>
+          </div>
+
+          <!-- Choose a new password (opened from the emailed link: /login.html?token=...) -->
+          <div class="auth-view" id="view-reset" hidden>
+            <div class="auth-head">
+              <span class="head-ico"><i class="ph-duotone ph-lock-key"></i></span>
+              <h1>Choose a new password</h1>
+              <p>Use at least 8 characters.</p>
+            </div>
+
+            <div class="hd-alert hd-alert-danger mb-3" id="reset-alert" role="alert" hidden>
+              <i class="ph-duotone ph-warning-circle"></i><span></span>
+            </div>
+
+            <form id="reset-form" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label class="hd-label" for="reset-password">New password</label>
+                <div class="hd-field has-toggle">
+                  <i class="ph-duotone ph-lock-key field-icon"></i>
+                  <input type="password" class="form-control" id="reset-password" name="new_password" placeholder="New password" autocomplete="new-password" minlength="8" maxlength="72" required>
+                  <button type="button" class="toggle-visibility" data-toggle-password="reset-password" aria-label="Show password" aria-pressed="false">
+                    <i class="ph-duotone ph-eye"></i>
+                  </button>
+                  <div class="invalid-feedback">Password must be 8 to 72 characters.</div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="hd-label" for="reset-confirm">Confirm password</label>
+                <div class="hd-field">
+                  <i class="ph-duotone ph-shield-check field-icon"></i>
+                  <input type="password" class="form-control" id="reset-confirm" placeholder="Repeat new password" autocomplete="new-password" required>
+                  <div class="invalid-feedback">Passwords don't match.</div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-hd btn-lg w-100" id="reset-submit">
+                <span class="label">Update password</span>
+                <span class="btn-icon"><i class="ph-bold ph-check"></i></span>
+              </button>
+            </form>
+            <div class="text-center mt-4">
+              <a href="#login" class="auth-back" data-view="login"><i class="ph-bold ph-arrow-left"></i>Back to sign in</a>
+            </div>
+          </div>
+        </div>
+
+        <p class="auth-foot mb-0"><i class="ph-duotone ph-shield-check"></i> Authorised staff only &nbsp;·&nbsp; &copy; <span id="year"></span> HassDent Dental Supplies</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/login.js"></script>
+</body>
+</html>

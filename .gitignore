@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Secrets: never commit these (they hold your DB password and JWT secret)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime / process files
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Test and coverage output
+coverage/
+.nyc_output/
+
+# Build output
+dist/
+build/
+.cache/
+
+# Uploaded files (product images, receipts) if you store them locally
+uploads/
+
+# Database dumps and backups
+*.sql.bak
+*.dump
+*.backup
+
+# Editor and IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Vercel / deployment
+.vercel/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

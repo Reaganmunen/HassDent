@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Point of Sale · HassDent Dental Supplies</title>
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="/vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/shell.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/pos.css">
+</head>
+<body data-page="pos">
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sb-scrim" id="sb-scrim"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Open menu"><i class="ph-duotone ph-list"></i></button>
+      <div class="title"><h1>Point of Sale</h1><div class="sub">Scan a barcode or search by name / SKU</div></div>
+      <div class="actions">
+        <div class="dropdown">
+          <button class="icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-label="Notifications">
+            <i class="ph-duotone ph-bell"></i><span class="dot" id="notif-dot" hidden>0</span></button>
+          <div class="dropdown-menu dropdown-menu-end notif-menu">
+            <div class="notif-head"><b>Notifications</b><button type="button" id="notif-readall" hidden>Mark all as read</button></div>
+            <div class="notif-list" id="notif-list"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="row grid-gap">
+      <div class="col-12 col-xl-7">
+        <div class="card-hd">
+          <div class="pos-search"><i class="ph-duotone ph-barcode"></i>
+            <input id="q" class="form-control" type="search" placeholder="Scan barcode or type product name / SKU…" autocomplete="off" autofocus>
+          </div>
+          <div id="results" class="pos-results"><div class="state-box"><i class="ph-duotone ph-magnifying-glass"></i><div>Search for a product to add it to the sale</div></div></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-5">
+        <div class="card-hd cart">
+          <div class="card-title-row"><h2>Current sale</h2><span class="count-pill" id="cart-count">0 items</span>
+            <button class="see-all border-0 bg-transparent" id="clear" type="button"><i class="ph-duotone ph-trash"></i> Clear</button></div>
+
+          <div class="cust" id="cust">
+            <div class="pos-search sm"><i class="ph-duotone ph-user-plus"></i>
+              <input id="cq" class="form-control" type="search" placeholder="Customer (optional): name or phone" autocomplete="off"></div>
+            <div id="cres" class="cust-res" hidden></div>
+            <div id="cchip" class="cust-chip" hidden></div>
+          </div>
+
+          <div id="lines" class="lines"><div class="state-box"><i class="ph-duotone ph-shopping-cart"></i><div>Cart is empty</div></div></div>
+
+          <div class="totals">
+            <div><span>Items</span><b id="t-units">0</b></div>
+            <div class="grand"><span>Total</span><b id="t-total">KES 0.00</b></div>
+          </div>
+          <button class="btn btn-hd btn-lg w-100 mt-3" id="pay" type="button" disabled><span>Charge</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- payment modal -->
+<div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content pay-modal">
+    <div class="modal-body p-4">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div><div class="text-muted small fw-semibold">Amount due</div><div class="pay-due" id="m-due">KES 0.00</div></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="hd-alert hd-alert-danger mb-3" id="m-err" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>
+      <div class="methods" id="methods">
+        <button type="button" data-m="cash" class="on"><i class="ph-duotone ph-money"></i>Cash</button>
+        <button type="button" data-m="mpesa"><i class="ph-duotone ph-device-mobile"></i>M-Pesa</button>
+        <button type="button" data-m="card"><i class="ph-duotone ph-credit-card"></i>Card</button>
+        <button type="button" data-m="bank_transfer"><i class="ph-duotone ph-bank"></i>Bank</button>
+      </div>
+      <label class="hd-label" for="m-amt">Amount received (KES)</label>
+      <div class="hd-field mb-2"><i class="ph-duotone ph-coins field-icon"></i><input id="m-amt" class="form-control" type="number" min="0" step="0.01" inputmode="decimal"></div>
+      <div class="quick-amts" id="m-quick"></div>
+      <div id="m-refwrap" class="mt-3" hidden><label class="hd-label" for="m-ref">Reference / M-Pesa code</label>
+        <div class="hd-field"><i class="ph-duotone ph-hash field-icon"></i><input id="m-ref" class="form-control" type="text" maxlength="60" placeholder="e.g. SHK4X92LQ"></div></div>
+      <div class="pay-line" id="m-line"></div>
+      <button class="btn btn-hd btn-lg w-100 mt-3" id="m-confirm" type="button"><span class="label">Complete sale</span></button>
+    </div>
+  </div></div>
+</div>
+
+<!-- receipt modal -->
+<div class="modal fade" id="doneModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content pay-modal text-center p-4">
+    <div class="done-ico"><i class="ph-duotone ph-check-circle"></i></div>
+    <h2 class="h5 fw-bold mb-1">Sale complete</h2>
+    <div class="text-muted small mb-3" id="d-num"></div>
+    <div class="pay-due mb-1" id="d-total"></div>
+    <div class="text-muted small mb-4" id="d-change"></div>
+    <button class="btn btn-hd btn-lg w-100" id="d-new" type="button"><span>New sale</span></button>
+  </div></div>
+</div>
+
+<script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script src="/js/pos.js"></script>
+</body>
+</html>
