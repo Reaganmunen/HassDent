@@ -199,8 +199,7 @@
 
     // actions
     const a = [];
-    if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print receipt</button>');
-    if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="pdf" type="button"><i class="ph-duotone ph-download-simple"></i>Download PDF</button>');
+    if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print &amp; save receipt</button>');
     if (completed && balance > 0 && can('sales.create')) a.push('<button class="btn-soft" data-act="view-pay" type="button"><i class="ph-duotone ph-hand-coins"></i>Record payment</button>');
     if (completed && can('sales.refund') && returnable(s)) a.push('<button class="btn-soft" data-act="view-return" type="button"><i class="ph-duotone ph-arrow-u-up-left"></i>Return items</button>');
     if (completed && can('sales.void') && !returns.length) a.push('<button class="btn-soft danger" data-act="view-void" type="button"><i class="ph-duotone ph-prohibit"></i>Void sale</button>');
@@ -308,24 +307,7 @@
     } catch (e) { setBusy(btn, false); toast(e.message, true); }
   }
 
-  // ---- receipt: A4 statement-style layout. Print it, or download it as a PDF.
-  // html2pdf is loaded on first use. To work offline, self-host it and change this path.
-  const PDF_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js';
-  let pdfLibPromise = null;
-  function loadPdfLib() {
-    if (window.html2pdf) return Promise.resolve();
-    if (!pdfLibPromise) {
-      pdfLibPromise = new Promise((resolve, reject) => {
-        const sc = document.createElement('script');
-        sc.src = PDF_LIB;
-        sc.onload = resolve;
-        sc.onerror = () => { pdfLibPromise = null; reject(new Error('Could not load the PDF library. Check your connection.')); };
-        document.head.appendChild(sc);
-      });
-    }
-    return pdfLibPromise;
-  }
-
+  // ---- receipt: A4 statement-style layout. Print also saves a copy to the computer.
   const RECEIPT_CSS = `
     .rcpt { font: 13px/1.5 Arial, Helvetica, sans-serif; color: #111; width: 100%; max-width: 718px; margin: 0 auto; padding: 4px 2px; box-sizing: border-box; background: #fff; position: relative; }
     .rcpt * { box-sizing: border-box; }
@@ -416,42 +398,31 @@
 
   async function fetchReceipt() { return api(`/sales/${state.sale.id}/receipt`); }
 
+  function receiptDoc(r) {
+    return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.sale.sale_number)}</title><style>
+      @page { size: A4; margin: 12mm; } body { margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
+  }
+
+  // saves a standalone copy of the receipt (opens in any browser, prints cleanly)
+  function saveReceiptCopy(r) {
+    const blob = new Blob([receiptDoc(r)], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Receipt-${r.sale.sale_number}.html`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
   async function printReceipt(btn) {
     const w = window.open('', '_blank', 'width=900,height=800');   // open first so the pop-up isn't blocked
     if (!w) return toast('Allow pop-ups to print receipts', true);
     setBusy(btn, true, 'Preparing…');
     try {
       const r = await fetchReceipt();
-      w.document.open();
-      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.sale.sale_number)}</title><style>
-        @page { size: A4; margin: 12mm; } body { margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`);
-      w.document.close();
+      w.document.open(); w.document.write(receiptDoc(r)); w.document.close();
+      try { saveReceiptCopy(r); } catch (e) { /* saving a copy must never block printing */ }
       w.focus(); setTimeout(() => w.print(), 350);
     } catch (e) { w.close(); toast(e.message, true); }
-    setBusy(btn, false);
-  }
-
-  async function downloadReceipt(btn) {
-    setBusy(btn, true, 'Building PDF…');
-    let holder;
-    try {
-      const [r] = await Promise.all([fetchReceipt(), loadPdfLib()]);
-      holder = document.createElement('div');
-      // must be in the DOM (and painted) for html2canvas; kept behind the page, fixed width = A4 minus margins
-      holder.style.cssText = 'position:fixed;top:0;left:0;width:718px;background:#fff;z-index:-1;';
-      holder.innerHTML = `<style>${RECEIPT_CSS}</style>${receiptBody(r)}`;
-      document.body.appendChild(holder);
-      await window.html2pdf().set({
-        margin: [10, 10, 10, 10],
-        filename: `Receipt-${r.sale.sale_number}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] },
-      }).from(holder.querySelector('.rcpt')).save();
-      toast('Receipt downloaded');
-    } catch (e) { toast(e.message || 'Could not create the PDF', true); }
-    if (holder) holder.remove();
     setBusy(btn, false);
   }
 
@@ -462,7 +433,6 @@
       case 'back': viewDetail(); break;
       case 'close': modal.hide(); break;
       case 'print': printReceipt(b); break;
-      case 'pdf': downloadReceipt(b); break;
       case 'view-pay': viewPay(); break;
       case 'view-void': viewVoid(); break;
       case 'view-return': viewReturn(); break;
