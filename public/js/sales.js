@@ -199,7 +199,7 @@
 
     // actions
     const a = [];
-    if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print &amp; save receipt</button>');
+    if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print receipt</button>');
     if (completed && balance > 0 && can('sales.create')) a.push('<button class="btn-soft" data-act="view-pay" type="button"><i class="ph-duotone ph-hand-coins"></i>Record payment</button>');
     if (completed && can('sales.refund') && returnable(s)) a.push('<button class="btn-soft" data-act="view-return" type="button"><i class="ph-duotone ph-arrow-u-up-left"></i>Return items</button>');
     if (completed && can('sales.void') && !returns.length) a.push('<button class="btn-soft danger" data-act="view-void" type="button"><i class="ph-duotone ph-prohibit"></i>Void sale</button>');
@@ -307,24 +307,7 @@
     } catch (e) { setBusy(btn, false); toast(e.message, true); }
   }
 
-  // ---- receipt: A4 statement-style layout. Print also saves a PDF copy to the computer.
-  // html2pdf is self-hosted (like bootstrap) and loaded on first use.
-  const PDF_LIB = 'vendor/html2pdf/html2pdf.bundle.min.js';
-  let pdfLibPromise = null;
-  function loadPdfLib() {
-    if (window.html2pdf) return Promise.resolve();
-    if (!pdfLibPromise) {
-      pdfLibPromise = new Promise((resolve, reject) => {
-        const sc = document.createElement('script');
-        sc.src = PDF_LIB;
-        sc.onload = resolve;
-        sc.onerror = () => { pdfLibPromise = null; reject(new Error('Could not load ' + PDF_LIB + '. Make sure the file is uploaded to your server.')); };
-        document.head.appendChild(sc);
-      });
-    }
-    return pdfLibPromise;
-  }
-
+  // ---- receipt: A4 statement-style layout. Print only.
   const RECEIPT_CSS = `
     .rcpt { font: 13px/1.5 Arial, Helvetica, sans-serif; color: #111; width: 100%; max-width: 718px; margin: 0 auto; padding: 4px 2px; box-sizing: border-box; background: #fff; position: relative; }
     .rcpt * { box-sizing: border-box; }
@@ -420,26 +403,6 @@
       @page { size: A4; margin: 12mm; } body { margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
   }
 
-  // builds the receipt as a real PDF and saves it to the computer
-  async function saveReceiptPdf(r) {
-    await loadPdfLib();
-    const holder = document.createElement('div');
-    // must be in the DOM for html2canvas; sits behind the page at A4 width minus margins
-    holder.style.cssText = 'position:fixed;top:0;left:0;width:718px;background:#fff;z-index:-1;';
-    holder.innerHTML = `<style>${RECEIPT_CSS}</style>${receiptBody(r)}`;
-    document.body.appendChild(holder);
-    try {
-      await window.html2pdf().set({
-        margin: [10, 10, 10, 10],
-        filename: `Receipt-${r.sale.sale_number}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] },
-      }).from(holder.querySelector('.rcpt')).save();
-    } finally { holder.remove(); }
-  }
-
   async function printReceipt(btn) {
     const w = window.open('', '_blank', 'width=900,height=800');   // open first so the pop-up isn't blocked
     if (!w) return toast('Allow pop-ups to print receipts', true);
@@ -448,9 +411,6 @@
       const r = await fetchReceipt();
       w.document.open(); w.document.write(receiptDoc(r)); w.document.close();
       w.focus(); setTimeout(() => w.print(), 350);
-      // save the PDF too; a failure here must never block printing
-      try { await saveReceiptPdf(r); toast('Receipt saved as PDF'); }
-      catch (e) { toast('Printed, but the PDF could not be saved: ' + (e.message || 'unknown error'), true); }
     } catch (e) { w.close(); toast(e.message, true); }
     setBusy(btn, false);
   }
