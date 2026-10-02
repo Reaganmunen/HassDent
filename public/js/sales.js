@@ -200,6 +200,7 @@
     // actions
     const a = [];
     if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print receipt</button>');
+    if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="pdf" type="button"><i class="ph-duotone ph-download-simple"></i>Download PDF</button>');
     if (completed && balance > 0 && can('sales.create')) a.push('<button class="btn-soft" data-act="view-pay" type="button"><i class="ph-duotone ph-hand-coins"></i>Record payment</button>');
     if (completed && can('sales.refund') && returnable(s)) a.push('<button class="btn-soft" data-act="view-return" type="button"><i class="ph-duotone ph-arrow-u-up-left"></i>Return items</button>');
     if (completed && can('sales.void') && !returns.length) a.push('<button class="btn-soft danger" data-act="view-void" type="button"><i class="ph-duotone ph-prohibit"></i>Void sale</button>');
@@ -307,50 +308,151 @@
     } catch (e) { setBusy(btn, false); toast(e.message, true); }
   }
 
-  // ---- receipt (80mm thermal-style print window)
+  // ---- receipt: A4 statement-style layout. Print it, or download it as a PDF.
+  // html2pdf is loaded on first use. To work offline, self-host it and change this path.
+  const PDF_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js';
+  let pdfLibPromise = null;
+  function loadPdfLib() {
+    if (window.html2pdf) return Promise.resolve();
+    if (!pdfLibPromise) {
+      pdfLibPromise = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = PDF_LIB;
+        sc.onload = resolve;
+        sc.onerror = () => { pdfLibPromise = null; reject(new Error('Could not load the PDF library. Check your connection.')); };
+        document.head.appendChild(sc);
+      });
+    }
+    return pdfLibPromise;
+  }
+
+  const RECEIPT_CSS = `
+    .rcpt { font: 13px/1.5 Arial, Helvetica, sans-serif; color: #111; width: 100%; max-width: 718px; margin: 0 auto; padding: 4px 2px; box-sizing: border-box; background: #fff; position: relative; }
+    .rcpt * { box-sizing: border-box; }
+    .rcpt .shop { text-align: center; margin-bottom: 14px; }
+    .rcpt .shop h1 { font-size: 30px; font-weight: 400; letter-spacing: .5px; margin: 0 0 6px; text-transform: uppercase; }
+    .rcpt .shop .addr { font-size: 11px; margin-bottom: 10px; }
+    .rcpt .shop .contact { font-size: 13px; line-height: 1.6; }
+    .rcpt .doc-title { text-align: center; font-size: 24px; margin: 18px 0 14px; letter-spacing: 1px; }
+    .rcpt .meta { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .rcpt .meta .r { text-align: right; }
+    .rcpt .meta b { font-weight: 700; }
+    .rcpt .served { margin-bottom: 14px; }
+    .rcpt table { width: 100%; border-collapse: collapse; }
+    .rcpt thead th { text-align: left; font-weight: 700; font-size: 12px; text-transform: uppercase; padding: 6px 4px; border-bottom: 1px solid #ddd; }
+    .rcpt tbody td { padding: 6px 4px; border-bottom: 1px solid #eee; vertical-align: top; }
+    .rcpt tr { page-break-inside: avoid; }
+    .rcpt .n { text-align: right; white-space: nowrap; }
+    .rcpt .rule { border-top: 1px solid #222; margin: 22px 0 10px; }
+    .rcpt .sum { display: flex; justify-content: space-between; gap: 28px; align-items: flex-start; page-break-inside: avoid; }
+    .rcpt .sum > div { flex: 1; }
+    .rcpt .sum .row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 4px; border-bottom: 1px solid #eee; }
+    .rcpt .sum .row.b { font-weight: 700; }
+    .rcpt .sum .row.due { font-weight: 700; color: #b00020; }
+    .rcpt .sum .row small { color: #555; }
+    .rcpt .pay-info { text-align: center; margin-top: 22px; font-style: italic; font-weight: 700; line-height: 2; }
+    .rcpt .thanks { text-align: center; margin-top: 14px; }
+    .rcpt .stamp { position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg); border: 4px solid #b00020; color: #b00020; font-size: 56px; font-weight: 700; letter-spacing: 6px; padding: 4px 22px; opacity: .22; pointer-events: none; }
+  `;
+
+  function receiptBody({ shop, sale: s }) {
+    shop = shop || {};
+    const pays = (s.payments || []).filter((p) => p.status === 'completed');
+    const completed = s.status === 'completed';
+    const balance = completed ? (Number(s.balance) || 0) : 0;
+    const row = (l, r, cls) => `<div class="row${cls ? ' ' + cls : ''}"><span>${l}</span><span>${r}</span></div>`;
+    const kes = (v) => 'KSh ' + money2(v);
+    const contact = [shop.phone, shop.email, shop.kra_pin ? 'PIN: ' + shop.kra_pin : ''].filter(Boolean).map(esc).join('<br>');
+    const paybill = shop.paybill
+      ? `<div class="pay-info">M-PESA PAYBILL<br>${esc(shop.paybill)}${shop.paybill_account ? '<br>ACC ' + esc(shop.paybill_account) : ''}</div>` : '';
+
+    return `<div class="rcpt">
+      ${s.status === 'voided' ? '<div class="stamp">VOIDED</div>' : ''}
+      <div class="shop">
+        <h1>${esc(shop.name || 'HassDent')}</h1>
+        ${shop.address ? `<div class="addr">${esc(shop.address)}</div>` : ''}
+        ${contact ? `<div class="contact">${contact}</div>` : ''}
+      </div>
+      <div class="doc-title">RECEIPT</div>
+      <div class="meta">
+        <div>
+          <div><b>RECEIPT No.</b> ${esc(s.sale_number)}</div>
+          <div><b>Customer</b></div>
+          <div>${s.customer_name ? esc(s.customer_name) : 'Walk-in'}</div>
+          ${s.customer_phone ? `<div><b>Mobile</b>: ${esc(s.customer_phone)}</div>` : ''}
+        </div>
+        <div class="r"><b>Date</b> ${esc(fmt.when(s.sold_at))}</div>
+      </div>
+      <div class="served"><b>Served by :</b> ${esc(s.sold_by_name || '—')}</div>
+
+      <table>
+        <thead><tr><th>Item</th><th class="n">Qty</th><th class="n">Price</th><th class="n">Total</th></tr></thead>
+        <tbody>${(s.items || []).map((i) => `<tr>
+          <td>${esc(i.product_name)}${i.sku ? ' , ' + esc(i.sku) : ''}</td>
+          <td class="n">${num(i.quantity)} Pc(s)</td>
+          <td class="n">${money2(i.unit_price)}</td>
+          <td class="n">${money2(i.line_total)}</td></tr>`).join('')}</tbody>
+      </table>
+
+      <div class="rule"></div>
+      <div class="sum">
+        <div>
+          ${pays.map((p) => row(`${esc(PAY_LABEL[p.method] || p.method)}${p.reference ? ` <small>· ${esc(p.reference)}</small>` : ''}`, `${kes(p.amount)} <small>${esc(fmt.when(p.paid_at))}</small>`)).join('')}
+          ${row('Total Paid', kes(s.amount_paid), 'b')}
+          ${completed ? row('Total Due', kes(balance), balance > 0 ? 'due' : 'b') : ''}
+        </div>
+        <div>
+          ${row('Subtotal:', kes(s.subtotal), 'b')}
+          ${Number(s.discount_amount) > 0 ? row('Discount:', '− ' + kes(s.discount_amount)) : ''}
+          ${Number(s.loyalty_discount) > 0 ? row('Loyalty:', '− ' + kes(s.loyalty_discount)) : ''}
+          ${row('VAT included:', kes(s.tax_total))}
+          ${row('Total:', kes(s.total), 'b')}
+        </div>
+      </div>
+      ${paybill}
+      <div class="thanks">${esc(shop.footer || 'Thank you for allowing us to serve you!')}</div>
+    </div>`;
+  }
+
+  async function fetchReceipt() { return api(`/sales/${state.sale.id}/receipt`); }
+
   async function printReceipt(btn) {
-    const w = window.open('', '_blank', 'width=400,height=700');
+    const w = window.open('', '_blank', 'width=900,height=800');   // open first so the pop-up isn't blocked
     if (!w) return toast('Allow pop-ups to print receipts', true);
     setBusy(btn, true, 'Preparing…');
     try {
-      const r = await api(`/sales/${state.sale.id}/receipt`);
-      w.document.open(); w.document.write(receiptHtml(r)); w.document.close();
+      const r = await fetchReceipt();
+      w.document.open();
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.sale.sale_number)}</title><style>
+        @page { size: A4; margin: 12mm; } body { margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`);
+      w.document.close();
       w.focus(); setTimeout(() => w.print(), 350);
     } catch (e) { w.close(); toast(e.message, true); }
     setBusy(btn, false);
   }
 
-  function receiptHtml({ shop, sale: s }) {
-    const line = (l, r, b) => `<div class="l${b ? ' b' : ''}"><span>${l}</span><span>${r}</span></div>`;
-    const pays = (s.payments || []).filter((p) => p.status === 'completed');
-    return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(s.sale_number)}</title><style>
-      @page { size: 80mm auto; margin: 4mm; }
-      body { font: 12px/1.45 "Courier New", monospace; width: 72mm; margin: 0 auto; color: #000; }
-      h1 { font-size: 15px; text-align: center; margin: 0 0 2px; }
-      .c { text-align: center; } .hr { border-top: 1px dashed #000; margin: 6px 0; }
-      .l { display: flex; justify-content: space-between; gap: 8px; } .b { font-weight: 700; font-size: 13px; }
-      .it { margin-bottom: 4px; } .v { text-align: center; font-weight: 700; border: 1px solid #000; margin: 6px 0; padding: 2px; }
-    </style></head><body>
-      <h1>${esc(shop.name || 'HassDent')}</h1>
-      <div class="c">${esc(shop.address || '')}<br>${esc(shop.phone || '')}${shop.email ? '<br>' + esc(shop.email) : ''}${shop.kra_pin ? '<br>PIN: ' + esc(shop.kra_pin) : ''}</div>
-      <div class="hr"></div>
-      ${line('Receipt', esc(s.sale_number))}${line('Date', esc(fmt.when(s.sold_at)))}
-      ${s.customer_name ? line('Customer', esc(s.customer_name)) : ''}${line('Served by', esc(s.sold_by_name || '—'))}
-      ${s.status === 'voided' ? '<div class="v">*** VOIDED ***</div>' : ''}
-      <div class="hr"></div>
-      ${(s.items || []).map((i) => `<div class="it"><div>${esc(i.product_name)}</div>${line(num(i.quantity) + ' x ' + money2(i.unit_price), money2(i.line_total))}</div>`).join('')}
-      <div class="hr"></div>
-      ${line('Subtotal', money2(s.subtotal))}
-      ${Number(s.discount_amount) > 0 ? line('Discount', '-' + money2(s.discount_amount)) : ''}
-      ${Number(s.loyalty_discount) > 0 ? line('Loyalty', '-' + money2(s.loyalty_discount)) : ''}
-      ${line('VAT incl.', money2(s.tax_total))}
-      ${line('TOTAL', money2(s.total), true)}
-      <div class="hr"></div>
-      ${pays.map((p) => line(esc(PAY_LABEL[p.method] || p.method), money2(p.amount))).join('')}
-      ${Number(s.balance) > 0 && s.status === 'completed' ? line('Balance due', money2(s.balance), true) : ''}
-      <div class="hr"></div>
-      <div class="c">${esc(shop.footer || 'Thank you for shopping with us!')}</div>
-    </body></html>`;
+  async function downloadReceipt(btn) {
+    setBusy(btn, true, 'Building PDF…');
+    let holder;
+    try {
+      const [r] = await Promise.all([fetchReceipt(), loadPdfLib()]);
+      holder = document.createElement('div');
+      // must be in the DOM (and painted) for html2canvas; kept behind the page, fixed width = A4 minus margins
+      holder.style.cssText = 'position:fixed;top:0;left:0;width:718px;background:#fff;z-index:-1;';
+      holder.innerHTML = `<style>${RECEIPT_CSS}</style>${receiptBody(r)}`;
+      document.body.appendChild(holder);
+      await window.html2pdf().set({
+        margin: [10, 10, 10, 10],
+        filename: `Receipt-${r.sale.sale_number}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+      }).from(holder.querySelector('.rcpt')).save();
+      toast('Receipt downloaded');
+    } catch (e) { toast(e.message || 'Could not create the PDF', true); }
+    if (holder) holder.remove();
+    setBusy(btn, false);
   }
 
   // ------------------------------------------------------------------ events
@@ -360,6 +462,7 @@
       case 'back': viewDetail(); break;
       case 'close': modal.hide(); break;
       case 'print': printReceipt(b); break;
+      case 'pdf': downloadReceipt(b); break;
       case 'view-pay': viewPay(); break;
       case 'view-void': viewVoid(); break;
       case 'view-return': viewReturn(); break;
