@@ -200,6 +200,7 @@
     // actions
     const a = [];
     if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print receipt</button>');
+    if (completed) a.push('<button class="btn-soft" data-act="view-whatsapp" type="button" style="color:#128c4a"><i class="ph-duotone ph-whatsapp-logo"></i>Share on WhatsApp</button>');
     if (completed && balance > 0 && can('sales.create')) a.push('<button class="btn-soft" data-act="view-pay" type="button"><i class="ph-duotone ph-hand-coins"></i>Record payment</button>');
     if (completed && can('sales.refund') && returnable(s)) a.push('<button class="btn-soft" data-act="view-return" type="button"><i class="ph-duotone ph-arrow-u-up-left"></i>Return items</button>');
     if (completed && can('sales.void') && !returns.length) a.push('<button class="btn-soft danger" data-act="view-void" type="button"><i class="ph-duotone ph-prohibit"></i>Void sale</button>');
@@ -415,6 +416,59 @@
     setBusy(btn, false);
   }
 
+  // ---- receipt: share on WhatsApp (plain-text message, opens wa.me)
+  let shopInfo = null;   // shop name / address / footer, fetched once from the receipt endpoint
+
+  /** 0712345678 / 712345678 / +254712345678 -> 254712345678 (the digits-only form wa.me expects). */
+  function waNumber(raw) {
+    let d = String(raw || '').replace(/\D/g, '');
+    if (/^0[17]\d{8}$/.test(d)) d = '254' + d.slice(1);
+    else if (/^[17]\d{8}$/.test(d)) d = '254' + d;
+    return d;
+  }
+
+  function waMessage(s, shop) {
+    shop = shop || {};
+    const kes = (v) => 'KSh ' + money2(v);
+    const when = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Nairobi', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(s.sold_at));
+    const pays = (s.payments || []).filter((p) => p.status === 'completed');
+    const balance = Number(s.balance) || 0;
+    const L = ['*' + (shop.name || 'HassDent') + '*'];
+    if (shop.address) L.push(shop.address);
+    if (shop.phone) L.push('Tel: ' + shop.phone);
+    L.push('', '*Receipt ' + s.sale_number + '*', when);
+    if (s.customer_name) L.push('Customer: ' + s.customer_name);
+    L.push('------------------------');
+    (s.items || []).forEach((i) => { L.push(i.product_name); L.push('  ' + i.quantity + ' x ' + money2(i.unit_price) + ' = ' + money2(i.line_total)); });
+    L.push('------------------------');
+    if (Number(s.discount_amount) > 0) L.push('Discount: -' + kes(s.discount_amount));
+    if (Number(s.loyalty_discount) > 0) L.push('Loyalty: -' + kes(s.loyalty_discount));
+    L.push('*TOTAL: ' + kes(s.total) + '*');
+    pays.forEach((p) => L.push((PAY_LABEL[p.method] || p.method) + ': ' + kes(p.amount)));
+    L.push(balance > 0 ? '*Balance due: ' + kes(balance) + '*' : 'Paid in full');
+    if (shop.paybill) L.push('', 'M-Pesa Paybill: ' + shop.paybill + (shop.paybill_account ? ' (Acc ' + shop.paybill_account + ')' : ''));
+    L.push('', shop.footer || 'Thank you for allowing us to serve you!');
+    return L.join('\n');
+  }
+
+  function viewWhatsApp() {
+    const s = state.sale;
+    $('s-body').innerHTML = headHtml(s, 'Share receipt on WhatsApp') +
+      '<button class="back-link" data-act="back" type="button"><i class="ph-bold ph-arrow-left"></i> Back to sale</button>' +
+      '<div class="sm-form">' +
+      '<label for="wa-phone">Customer WhatsApp number</label>' +
+      `<input id="wa-phone" class="form-control" type="tel" inputmode="tel" placeholder="0712 345 678" value="${esc(s.customer_phone || '')}" autocomplete="off">` +
+      '<div class="small text-muted mt-1">Leave it empty to choose the contact inside WhatsApp.</div>' +
+      '<button class="btn btn-lg w-100 mt-4" id="wa-send" data-act="wa-send" type="button" style="background:#25d366;border-color:#25d366;color:#fff;font-weight:700"><i class="ph-bold ph-whatsapp-logo"></i> Open WhatsApp</button></div>';
+    // Fetch the shop details in the background so the send click stays synchronous (browsers block pop-ups opened after an await).
+    if (!shopInfo) fetchReceipt().then((r) => { shopInfo = r.shop || {}; }).catch(() => {});
+  }
+
+  function sendWhatsApp() {
+    const num = waNumber($('wa-phone').value);
+    window.open((num ? 'https://wa.me/' + num : 'https://wa.me/') + '?text=' + encodeURIComponent(waMessage(state.sale, shopInfo)), '_blank', 'noopener');
+  }
+
   // ------------------------------------------------------------------ events
   $('s-body').addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
@@ -422,6 +476,8 @@
       case 'back': viewDetail(); break;
       case 'close': modal.hide(); break;
       case 'print': printReceipt(b); break;
+      case 'view-whatsapp': viewWhatsApp(); break;
+      case 'wa-send': sendWhatsApp(); break;
       case 'view-pay': viewPay(); break;
       case 'view-void': viewVoid(); break;
       case 'view-return': viewReturn(); break;
