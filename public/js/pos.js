@@ -8,58 +8,29 @@
 
   const cart = new Map();          // product_id -> { p, qty }
   let customer = null, method = 'cash', payModal, doneModal, busy = false;
+  let lastFile = null;                    // PDF receipt of the sale just completed
   let lastSale = null, lastShop = null;   // the sale just completed + shop details, used for the WhatsApp receipt
 
   const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
   const total = () => [...cart.values()].reduce((s, l) => s + cents(l.p.price) * l.qty, 0);
 
-  // ------------------------------------------------------------ WhatsApp receipt
-  const SHOP_FALLBACK = { name: 'HassDent Dental Supplies' };
-  const nf = new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const kes = (n) => 'KES ' + nf.format(Number(n) || 0);
-  const METHOD = { cash: 'Cash', mpesa: 'M-Pesa', card: 'Card', bank_transfer: 'Bank transfer' };
-
-  /** Kenyan numbers -> international digits for wa.me (0712345678 / 712345678 / +254712345678 -> 254712345678). */
-  function waNumber(raw) {
-    let d = String(raw || '').replace(/\D/g, '');
-    if (!d) return '';
-    if (/^0[17]\d{8}$/.test(d)) d = '254' + d.slice(1);
-    else if (/^[17]\d{8}$/.test(d)) d = '254' + d;
-    return d;
+  // ------------------------------------------------------------ WhatsApp receipt (shared helpers in receipt.js)
+  function setPdfBtn(ready, failed) {
+    const b = $('d-pdf'); if (!b) return;
+    b.disabled = !ready;
+    b.querySelector('span').textContent = ready ? 'Share PDF receipt on WhatsApp' : failed ? 'PDF unavailable' : 'Preparing PDF…';
+    $('d-note').hidden = true;
   }
-
-  function receiptText(sale, shop) {
-    const when = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Nairobi', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(sale.sold_at || Date.now()));
-    const L = [];
-    L.push('*' + (shop.name || SHOP_FALLBACK.name) + '*');
-    if (shop.address) L.push(shop.address);
-    if (shop.phone) L.push('Tel: ' + shop.phone);
-    L.push('');
-    L.push('*Receipt ' + (sale.sale_number || '') + '*');
-    L.push(when);
-    if (sale.customer_name) L.push('Customer: ' + sale.customer_name);
-    L.push('------------------------');
-    (sale.items || []).forEach((i) => {
-      L.push(i.product_name);
-      L.push('  ' + i.quantity + ' x ' + nf.format(i.unit_price) + ' = ' + nf.format(i.line_total));
+  // The PDF is built before the click so navigator.share() runs inside the click itself (browsers require that).
+  function sharePdf() {
+    if (!lastFile || !lastSale) return;
+    HD.receiptPdf.share(lastFile, { text: 'Receipt ' + (lastSale.sale_number || ''), phone: $('d-phone').value }).then((res) => {
+      const n = $('d-note');
+      if (res === 'downloaded') { n.textContent = 'PDF saved to this device. Attach it in the WhatsApp chat that just opened.'; n.hidden = false; }
     });
-    L.push('------------------------');
-    if (Number(sale.discount_amount) > 0) L.push('Discount: -' + kes(sale.discount_amount));
-    L.push('*TOTAL: ' + kes(sale.total) + '*');
-    (sale.payments || []).forEach((p) => L.push((METHOD[p.method] || p.method) + ': ' + kes(p.amount)));
-    if (Number(sale.balance) > 0) L.push('*Balance due: ' + kes(sale.balance) + '*');
-    else L.push('Paid in full');
-    L.push('');
-    L.push(shop.footer || 'Thank you for shopping with us!');
-    return L.join('\n');
   }
-
   function sendWhatsApp() {
-    if (!lastSale) return;
-    const num = waNumber($('d-phone').value);
-    const base = num ? 'https://wa.me/' + num : 'https://wa.me/';
-    // opened straight from the click (no awaits before it) so browsers do not treat it as a blocked pop-up
-    window.open(base + '?text=' + encodeURIComponent(receiptText(lastSale, lastShop || SHOP_FALLBACK)), '_blank', 'noopener');
+    if (lastSale) HD.receipt.open(lastSale, lastShop, $('d-phone').value);
   }
 
   // ------------------------------------------------------------ product search
@@ -192,7 +163,9 @@
       const sale = await api('/sales', { method: 'POST', body });
       payModal.hide();
       lastSale = sale; lastShop = null;
-      api('/sales/' + sale.id + '/receipt').then((r) => { lastShop = r.shop; lastSale = r.sale; }).catch(() => {});   // shop name/address/footer for the message
+      lastFile = null; setPdfBtn(false);
+      api('/sales/' + sale.id + '/receipt').then((r) => { lastShop = r.shop; lastSale = r.sale; }).catch(() => {})   // shop name/address/footer for the receipt
+        .then(() => { try { lastFile = HD.receiptPdf.file({ shop: lastShop || {}, sale: lastSale }); setPdfBtn(true); } catch (e) { setPdfBtn(false, true); } });
       $('d-phone').value = customer && customer.phone ? customer.phone : '';
       $('d-num').textContent = sale.sale_number ? 'Receipt ' + sale.sale_number : '';
       $('d-total').textContent = KES(due);
@@ -201,9 +174,10 @@
     } catch (e) { fail(e.message); }
     finally { busy = false; btn.disabled = false; btn.querySelector('.label').textContent = 'Complete sale'; }
   });
+  $('d-pdf').addEventListener('click', sharePdf);
   $('d-wa').addEventListener('click', sendWhatsApp);
   $('d-new').addEventListener('click', () => {
-    lastSale = null; lastShop = null; $('d-phone').value = '';
+    lastSale = null; lastShop = null; lastFile = null; $('d-phone').value = '';
     doneModal.hide(); cart.clear(); customer = null; $('cchip').hidden = true; $('cq').parentElement.hidden = false;
     $('q').value = ''; draw(); search(); $('q').focus();
   });

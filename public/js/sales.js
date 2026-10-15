@@ -131,6 +131,7 @@
 
   async function refreshSale() {
     state.sale = await api('/sales/' + state.sale.id);
+    waPrep = null;   // balance / payments may have changed, so rebuild the PDF next time
     load();
     viewDetail();
   }
@@ -344,7 +345,7 @@
     const completed = s.status === 'completed';
     const balance = completed ? (Number(s.balance) || 0) : 0;
     const row = (l, r, cls) => `<div class="row${cls ? ' ' + cls : ''}"><span>${l}</span><span>${r}</span></div>`;
-    const kes = (v) => 'KSh ' + money2(v);
+    const kes = (v) => money2(v);
     const contact = [shop.phone, shop.email, shop.kra_pin ? 'PIN: ' + shop.kra_pin : ''].filter(Boolean).map(esc).join('<br>');
     const paybill = shop.paybill
       ? `<div class="pay-info">M-PESA PAYBILL<br>${esc(shop.paybill)}${shop.paybill_account ? '<br>ACC ' + esc(shop.paybill_account) : ''}</div>` : '';
@@ -429,7 +430,8 @@
 
   function waMessage(s, shop) {
     shop = shop || {};
-    const kes = (v) => 'KSh ' + money2(v);
+    const n2 = (v) => new Intl.NumberFormat('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0);
+    const kes = (v) => 'KSh ' + n2(v);
     const when = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Nairobi', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(s.sold_at));
     const pays = (s.payments || []).filter((p) => p.status === 'completed');
     const balance = Number(s.balance) || 0;
@@ -439,7 +441,7 @@
     L.push('', '*Receipt ' + s.sale_number + '*', when);
     if (s.customer_name) L.push('Customer: ' + s.customer_name);
     L.push('------------------------');
-    (s.items || []).forEach((i) => { L.push(i.product_name); L.push('  ' + i.quantity + ' x ' + money2(i.unit_price) + ' = ' + money2(i.line_total)); });
+    (s.items || []).forEach((i) => { L.push(i.product_name); L.push('  ' + i.quantity + ' x ' + n2(i.unit_price) + ' = ' + n2(i.line_total)); });
     L.push('------------------------');
     if (Number(s.discount_amount) > 0) L.push('Discount: -' + kes(s.discount_amount));
     if (Number(s.loyalty_discount) > 0) L.push('Loyalty: -' + kes(s.loyalty_discount));
@@ -451,17 +453,42 @@
     return L.join('\n');
   }
 
+  let waPrep = null;   // { id, r, file }: the PDF for the sale on screen, built ahead of the click
+
   function viewWhatsApp() {
     const s = state.sale;
+    const pdfOk = Boolean(window.jspdf && HD.receiptPdf);
     $('s-body').innerHTML = headHtml(s, 'Share receipt on WhatsApp') +
       '<button class="back-link" data-act="back" type="button"><i class="ph-bold ph-arrow-left"></i> Back to sale</button>' +
       '<div class="sm-form">' +
       '<label for="wa-phone">Customer WhatsApp number</label>' +
       `<input id="wa-phone" class="form-control" type="tel" inputmode="tel" placeholder="0712 345 678" value="${esc(s.customer_phone || '')}" autocomplete="off">` +
-      '<div class="small text-muted mt-1">Leave it empty to choose the contact inside WhatsApp.</div>' +
-      '<button class="btn btn-lg w-100 mt-4" id="wa-send" data-act="wa-send" type="button" style="background:#25d366;border-color:#25d366;color:#fff;font-weight:700"><i class="ph-bold ph-whatsapp-logo"></i> Open WhatsApp</button></div>';
-    // Fetch the shop details in the background so the send click stays synchronous (browsers block pop-ups opened after an await).
-    if (!shopInfo) fetchReceipt().then((r) => { shopInfo = r.shop || {}; }).catch(() => {});
+      '<div class="small text-muted mt-1">Used for the text message, and to open the right chat if your browser cannot share files.</div>' +
+      (pdfOk
+        ? '<button class="btn btn-lg w-100 mt-4" id="wa-pdf" data-act="wa-pdf" type="button" disabled style="background:#25d366;border-color:#25d366;color:#fff;font-weight:700"><i class="ph-bold ph-whatsapp-logo"></i> <span>Preparing PDF…</span></button>' +
+          '<div class="small text-muted mt-2">On a phone this opens your share menu: pick WhatsApp, then the customer.</div>'
+        : '<div class="sm-note bad mt-3">PDF sharing is not set up on this page (jsPDF script missing).</div>') +
+      '<button class="btn-soft mt-3" data-act="wa-send" type="button"><i class="ph-duotone ph-chat-text"></i>Send as text message instead</button></div>';
+
+    // Build the PDF now so the Share click itself is synchronous (browsers only allow file sharing straight from a click).
+    if (!pdfOk) { if (!shopInfo) fetchReceipt().then((r) => { shopInfo = r.shop || {}; }).catch(() => {}); return; }
+    const ready = () => {
+      const btn = $('wa-pdf');
+      if (btn && waPrep && waPrep.id === s.id) { btn.disabled = false; btn.querySelector('span').textContent = 'Share PDF on WhatsApp'; }
+    };
+    if (waPrep && waPrep.id === s.id) { ready(); return; }
+    fetchReceipt().then((r) => {
+      shopInfo = r.shop || {};
+      waPrep = { id: s.id, r, file: HD.receiptPdf.file(r) };
+      ready();
+    }).catch(() => { const btn = $('wa-pdf'); if (btn) btn.querySelector('span').textContent = 'PDF unavailable'; });
+  }
+
+  function shareWaPdf() {
+    if (!waPrep) return;
+    HD.receiptPdf.share(waPrep.file, { text: 'Receipt ' + state.sale.sale_number, phone: $('wa-phone').value }).then((res) => {
+      if (res === 'downloaded') toast('PDF saved to this device. Attach it in the WhatsApp chat that just opened.');
+    });
   }
 
   function sendWhatsApp() {
@@ -477,6 +504,7 @@
       case 'close': modal.hide(); break;
       case 'print': printReceipt(b); break;
       case 'view-whatsapp': viewWhatsApp(); break;
+      case 'wa-pdf': shareWaPdf(); break;
       case 'wa-send': sendWhatsApp(); break;
       case 'view-pay': viewPay(); break;
       case 'view-void': viewVoid(); break;

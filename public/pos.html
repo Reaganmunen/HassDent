@@ -108,7 +108,9 @@
         <input id="d-phone" class="form-control" type="tel" inputmode="tel" placeholder="0712 345 678 (optional)" autocomplete="off"></div>
       <div class="small text-muted mt-1">Leave empty to pick the contact inside WhatsApp.</div>
     </div>
-    <button class="btn btn-wa btn-lg w-100 mb-2" id="d-wa" type="button"><i class="ph-bold ph-whatsapp-logo"></i><span>Send receipt on WhatsApp</span></button>
+    <button class="btn btn-wa btn-lg w-100 mb-2" id="d-pdf" type="button" disabled><i class="ph-bold ph-whatsapp-logo"></i><span>Preparing PDF…</span></button>
+    <div class="small text-muted mb-2" id="d-note" hidden></div>
+    <button class="btn btn-link btn-sm text-muted mb-2" id="d-wa" type="button">Send as text message instead</button>
     <button class="btn btn-hd btn-lg w-100" id="d-new" type="button"><span>New sale</span></button>
   </div></div>
 </div>
@@ -116,6 +118,9 @@
 <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/shell.js"></script>
+<script src="/vendor/jspdf/jspdf.umd.min.js"></script>
+<script src="/js/receipt.js"></script>
+<script src="/js/receipt-pdf.js"></script>
 <script src="/js/pos.js"></script>
 </body>
 </html>

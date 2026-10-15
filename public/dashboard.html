@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard · HassDent Dental Supplies</title>
   <meta name="theme-color" content="#1a1a1c">
-  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
 
-  <link rel="stylesheet" href="vendor/bootstrap/bootstrap.min.css">
-  <link rel="stylesheet" href="vendor/phosphor/duotone.css">
-  <link rel="stylesheet" href="vendor/phosphor/bold.css">
-  <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/shell.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/phosphor/duotone.css">
+  <link rel="stylesheet" href="/vendor/phosphor/bold.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/shell.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 <body data-page="dashboard">
   <div class="app">
@@ -40,7 +40,7 @@
             </div>
           </div>
 
-          <a class="btn-cta" href="pos.html" data-perm="sales.create">
+          <a class="btn-cta" href="/pos.html" data-perm="sales.create">
             <span class="txt">New Sale</span><span class="plus"><i class="ph-bold ph-plus"></i></span>
           </a>
         </div>
@@ -54,31 +54,11 @@
           <div class="card-hd">
             <div class="card-title-row"><h2>Quick actions</h2></div>
             <div class="quick">
-              <a href="pos.html" data-perm="sales.create"><i class="ph-duotone ph-cash-register"></i>New sale</a>
-              <a href="customers.html" data-perm="customers.view"><i class="ph-duotone ph-users-three"></i>Customers</a>
-              <a href="products.html" data-perm="products.view"><i class="ph-duotone ph-package"></i>Products</a>
-              <a href="stock.html" data-perm="stock.view"><i class="ph-duotone ph-stack"></i>Stock levels</a>
-              <a href="purchases.html" data-perm="purchases.view"><i class="ph-duotone ph-truck"></i>Purchases</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- catalogue: lookup-table management, shown only to users who can edit at least one -->
-        <div class="col-12" id="catalogue-col" hidden>
-          <div class="card-hd">
-            <div class="card-title-row">
-              <h2>Catalogue</h2>
-              <span class="count-pill warn" id="cat-count" hidden></span>
-              <a class="see-all" href="catalogue.html" data-perm="products.view">Manage all <i class="ph-bold ph-arrow-right"></i></a>
-            </div>
-            <div class="quick catalogue" id="catalogue-grid">
-              <a href="catalogue.html#categories"         data-perm="products.manage"><i class="ph-duotone ph-tree-structure"></i>Categories</a>
-              <a href="catalogue.html#brands"             data-perm="products.manage"><i class="ph-duotone ph-tag"></i>Brands</a>
-              <a href="catalogue.html#units"              data-perm="products.manage"><i class="ph-duotone ph-ruler"></i>Units</a>
-              <a href="catalogue.html#tax-rates"          data-perm="settings.manage"><i class="ph-duotone ph-percent"></i>Tax rates</a>
-              <a href="catalogue.html#customer-groups"    data-perm="settings.manage"><i class="ph-duotone ph-users-four"></i>Customer groups</a>
-              <a href="catalogue.html#locations"          data-perm="settings.manage"><i class="ph-duotone ph-storefront"></i>Locations</a>
-              <a href="catalogue.html#expense-categories" data-perm="expenses.manage"><i class="ph-duotone ph-receipt-x"></i>Expense categories</a>
+              <a href="/pos.html" data-perm="sales.create"><i class="ph-duotone ph-cash-register"></i>New sale</a>
+              <a href="/customers.html" data-perm="customers.view"><i class="ph-duotone ph-users-three"></i>Customers</a>
+              <a href="/products.html" data-perm="products.view"><i class="ph-duotone ph-package"></i>Products</a>
+              <a href="/stock.html" data-perm="stock.view"><i class="ph-duotone ph-stack"></i>Stock levels</a>
+              <a href="/purchases.html" data-perm="purchases.view"><i class="ph-duotone ph-truck"></i>Purchases</a>
             </div>
           </div>
         </div>
@@ -165,9 +145,9 @@
     </div>
   </div>
 
-  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/shell.js"></script>
-  <script src="js/dashboard.js"></script>
+  <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/shell.js"></script>
+  <script src="/js/dashboard.js"></script>
 </body>
 </html>
