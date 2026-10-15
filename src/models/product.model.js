@@ -21,7 +21,8 @@ async function list({ search, category_id, brand_id, active = true, low_stock, l
   }
   params.push(limit, offset);
   const { rows } = await query(
-    `SELECT p.id, p.sku, p.barcode, p.name, p.cost_price, p.selling_price, p.reorder_level, p.tracks_expiry, p.is_active,
+    `SELECT p.id, p.sku, p.barcode, p.name, p.cost_price, p.selling_price, p.min_price, p.reorder_level,
+            p.category_id, p.brand_id, p.unit_id, p.tracks_expiry, p.is_active,
             c.name AS category, b.name AS brand, u.abbreviation AS unit, COALESCE(sl.on_hand, 0) AS on_hand,
             COUNT(*) OVER()::INT AS total_count
        FROM products p

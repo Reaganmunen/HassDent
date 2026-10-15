@@ -51,3 +51,7 @@
 .pay-line.ok { background: #e3f6ec; color: #146c43; }
 .pay-line.warn { background: #fff1d6; color: #9a5b00; }
 .done-ico { font-size: 4rem; color: var(--hd-success); line-height: 1; margin-bottom: 8px; }
+.btn-wa { background: #25d366; border-color: #25d366; color: #fff; font-weight: 700; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 56px; }
+.btn-wa:hover, .btn-wa:focus { background: #1ebe5a; border-color: #1ebe5a; color: #fff; }
+.btn-wa i { font-size: 1.4rem; }
+#doneModal .form-control { height: 50px; padding-left: 48px; border-radius: 14px; border: 1.5px solid var(--hd-line); background: #fafaf8; font-weight: 500; }

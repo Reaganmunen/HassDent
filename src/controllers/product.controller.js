@@ -4,6 +4,13 @@ const { ok, created, paged, wrap } = require('../utils/respond');
 const { paginate } = require('../utils/sql');
 const audit = require('../utils/audit');
 
+/** The floor price can never be higher than the selling price. */
+function checkFloor(selling, min) {
+  if (selling !== undefined && selling !== null && min !== undefined && min !== null && Number(min) > Number(selling)) {
+    throw v.bad('Minimum price cannot be higher than the selling price');
+  }
+}
+
 exports.list = wrap(async (req, res) => {
   const page = paginate(req.query);
   const q = req.query;
@@ -33,6 +40,7 @@ exports.create = wrap(async (req, res) => {
   v.optNum(b.cost_price, 'cost_price', { min: 0 });
   v.optNum(b.selling_price, 'selling_price', { min: 0 });
   v.optNum(b.min_price, 'min_price', { min: 0 });
+  checkFloor(b.selling_price, b.min_price);
   v.optInt(b.reorder_level, 'reorder_level', { min: 0 });
   const opening = v.optInt(b.opening_stock, 'opening_stock', { min: 0 }) || 0;
   const location_id = opening > 0 ? (v.optId(b.location_id, 'location_id') || (await models.defaultLocationId())) : undefined;
@@ -49,6 +57,9 @@ exports.update = wrap(async (req, res) => {
   v.optNum(b.selling_price, 'selling_price', { min: 0 });
   v.optNum(b.min_price, 'min_price', { min: 0 });
   const before = await models.products.getById(id);
+  // check the final combination, so changing only one of the two prices is still validated
+  checkFloor(b.selling_price !== undefined ? b.selling_price : before.selling_price,
+    b.min_price !== undefined ? b.min_price : before.min_price);
   const product = await models.products.update(id, b);
   const keys = Object.keys(b);
   await audit.record(req, 'update', 'product', id, audit.pick(before, keys), audit.pick(product, keys));
