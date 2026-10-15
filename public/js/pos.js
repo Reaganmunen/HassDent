@@ -12,7 +12,11 @@
   let lastSale = null, lastShop = null;   // the sale just completed + shop details, used for the WhatsApp receipt
 
   const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
-  const total = () => [...cart.values()].reduce((s, l) => s + cents(l.p.price) * l.qty, 0);
+  // Each cart line can carry an edited unit price (l.price, in KES). Default is the list price from the search.
+  const unitC = (l) => cents(l.price != null ? l.price : l.p.price);
+  // Lowest price a line may be sold at: the product's minimum price, or the list price when no minimum is set.
+  const floorC = (p) => cents(p.min_price != null && p.min_price !== '' ? p.min_price : p.price);
+  const total = () => [...cart.values()].reduce((s, l) => s + unitC(l) * l.qty, 0);
 
   // ------------------------------------------------------------ WhatsApp receipt (shared helpers in receipt.js)
   function setPdfBtn(ready, failed) {
@@ -66,7 +70,7 @@
     if (!p) return;
     const l = cart.get(p.id) || { p, qty: 0 };
     if (l.qty + 1 > Number(p.on_hand)) return flash('Only ' + p.on_hand + ' of ' + p.name + ' in stock');
-    l.qty++; l.p = p; cart.set(p.id, l); draw();
+    l.qty++; l.p = p; if (l.price != null && cents(l.price) < floorC(p)) l.price = null; cart.set(p.id, l); draw();
   }
   function flash(msg) { const s = $('cart-count'); s.textContent = msg; s.className = 'count-pill bad'; setTimeout(draw, 2200); }
 
@@ -77,9 +81,11 @@
     $('pay').disabled = !cart.size; $('pay').firstElementChild.textContent = cart.size ? 'Charge ' + KES(total()) : 'Charge';
     if (!cart.size) { box.innerHTML = '<div class="state-box"><i class="ph-duotone ph-shopping-cart"></i><div>Cart is empty</div></div>'; return; }
     box.innerHTML = [...cart.values()].map(({ p, qty }) =>
-      `<div class="line" data-id="${p.id}"><div class="info"><b>${esc(p.name)}</b><small>${money2(p.price)} each</small></div>` +
+      `<div class="line" data-id="${p.id}"><div class="info"><b>${esc(p.name)}</b>` +
+      `<div class="price-edit"><span>KES</span><input type="number" step="0.01" inputmode="decimal" min="${(floorC(p) / 100).toFixed(2)}" value="${(unitC(cart.get(p.id)) / 100).toFixed(2)}" data-act="price" aria-label="Unit price"><span>each</span></div>` +
+      `<small>Min ${money2(floorC(p) / 100)}</small></div>` +
       `<div class="qty"><button type="button" data-act="dec" aria-label="Decrease">−</button><input type="number" min="1" value="${qty}" data-act="set" aria-label="Quantity"><button type="button" data-act="inc" aria-label="Increase">+</button></div>` +
-      `<div class="amt">${KES(cents(p.price) * qty)}</div><button class="rm" type="button" data-act="rm" aria-label="Remove"><i class="ph-duotone ph-x-circle"></i></button></div>`).join('');
+      `<div class="amt">${KES(unitC(cart.get(p.id)) * qty)}</div><button class="rm" type="button" data-act="rm" aria-label="Remove"><i class="ph-duotone ph-x-circle"></i></button></div>`).join('');
   }
   $('lines').addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]'), row = e.target.closest('.line'); if (!b || !row || b.tagName === 'INPUT') return;
@@ -90,7 +96,14 @@
     draw();
   });
   $('lines').addEventListener('change', (e) => {
-    const row = e.target.closest('.line'); if (!row || e.target.dataset.act !== 'set') return;
+    const row = e.target.closest('.line'); if (!row) return;
+    if (e.target.dataset.act === 'price') {                      // edited unit price: must be at or above the floor, any higher price is fine
+      const l = cart.get(Number(row.dataset.id)); if (!l) return;
+      const c = cents(e.target.value), floor = floorC(l.p);
+      if (e.target.value === '' || !Number.isFinite(c) || c < floor) { flash('Minimum price for ' + l.p.name + ' is ' + KES(floor)); draw(); return; }
+      l.price = c / 100; draw(); return;
+    }
+    if (e.target.dataset.act !== 'set') return;
     const l = cart.get(Number(row.dataset.id)); const n = Math.floor(Number(e.target.value));
     if (!n || n < 1) cart.delete(l.p.id); else if (n > Number(l.p.on_hand)) { l.qty = Number(l.p.on_hand); flash('Only ' + l.p.on_hand + ' in stock'); } else l.qty = n;
     draw();
@@ -158,7 +171,7 @@
     if (method !== 'cash' && got > due) return fail('Non-cash payments cannot be more than the amount due.');
     busy = true; const btn = $('m-confirm'); btn.disabled = true; btn.querySelector('.label').textContent = 'Processing…';
     try {
-      const body = { items: [...cart.values()].map((l) => ({ product_id: l.p.id, quantity: l.qty })), payments: got > 0 ? [{ method, amount: got / 100, reference: $('m-ref').value.trim() || undefined }] : [] };
+      const body = { items: [...cart.values()].map((l) => (unitC(l) !== cents(l.p.price) ? { product_id: l.p.id, quantity: l.qty, unit_price: unitC(l) / 100 } : { product_id: l.p.id, quantity: l.qty })), payments: got > 0 ? [{ method, amount: got / 100, reference: $('m-ref').value.trim() || undefined }] : [] };
       if (customer) body.customer_id = customer.id;
       const sale = await api('/sales', { method: 'POST', body });
       payModal.hide();

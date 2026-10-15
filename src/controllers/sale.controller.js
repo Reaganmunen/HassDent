@@ -28,7 +28,8 @@ function parsePayments(list) {
  * The POS checkout.
  * Body: { customer_id?, items:[{product_id,quantity,unit_price?,discount_amount?}], payments:[{method,amount,reference?}],
  *         discount_amount?, loyalty_points_to_redeem?, status?:'held', notes? }
- * Discounts / price overrides need the sales.discount permission; selling below a product's floor price needs products.manage.
+ * Discounts need the sales.discount permission. Editing a line's unit_price is open to anyone who can sell, but never below the product's minimum price
+ * (or below the list price when no minimum is set).
  */
 exports.create = wrap(async (req, res) => {
   const b = req.body || {};

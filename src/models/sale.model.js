@@ -37,12 +37,18 @@ async function priceLines(c, rawItems, customer, opts) {
     if (!p.is_active) throw new AppError(`"${p.name}" is inactive and cannot be sold`, 422, 'PRODUCT_INACTIVE');
     if (!Number.isInteger(it.quantity) || it.quantity <= 0) throw new AppError(`Invalid quantity for "${p.name}"`, 400, 'INVALID_QUANTITY');
 
-    let unitCents = toCents(prices.get(p.id));
+    const listCents = toCents(prices.get(p.id));
+    let unitCents = listCents;
     if (it.unit_price !== undefined && it.unit_price !== null) {
-      if (!opts.allow_price_override) throw new AppError('You are not allowed to change prices', 403, 'PRICE_OVERRIDE_DENIED');
+      // Cashier-edited price: any price at or above the floor is fine (higher than list is allowed too).
+      // The floor is the product's minimum selling price; if none is set, it is the list price.
+      // Nobody can sell an edited price below the floor, whatever their permissions.
       unitCents = toCents(it.unit_price);
-    }
-    if (p.min_price !== null && unitCents < toCents(p.min_price) && !opts.allow_below_min) {
+      const floorCents = p.min_price !== null ? toCents(p.min_price) : listCents;
+      if (unitCents < floorCents) {
+        throw new AppError(`"${p.name}" cannot be sold below KES ${fromCents(floorCents)}`, 422, 'BELOW_MIN_PRICE');
+      }
+    } else if (p.min_price !== null && unitCents < toCents(p.min_price) && !opts.allow_below_min) {
       throw new AppError(`"${p.name}" cannot be sold below KES ${p.min_price}`, 422, 'BELOW_MIN_PRICE');
     }
     const gross = unitCents * it.quantity;
