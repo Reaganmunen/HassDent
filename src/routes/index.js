@@ -159,6 +159,7 @@ router.get('/sales/:id/receipt', can('sales.view'), sales.receipt);
 router.post('/sales/:id/complete', can('sales.create'), sales.completeHeld);
 router.delete('/sales/:id/held', can('sales.create'), sales.deleteHeld);
 router.post('/sales/:id/payments', can('sales.create'), sales.addPayment);
+router.post('/sales/:id/items', can('sales.create'), sales.addItems);
 router.post('/sales/:id/void', can('sales.void'), sales.void);
 router.post('/sales/:id/returns', can('sales.refund'), sales.createReturn);
 router.get('/sales/:id/returns/:returnId', can('sales.view'), sales.getReturn);

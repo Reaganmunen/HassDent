@@ -203,6 +203,7 @@
     if (completed || s.status === 'voided') a.push('<button class="btn-soft" data-act="print" type="button"><i class="ph-duotone ph-printer"></i>Print receipt</button>');
     if (completed) a.push('<button class="btn-soft" data-act="view-whatsapp" type="button" style="color:#128c4a"><i class="ph-duotone ph-whatsapp-logo"></i>Share on WhatsApp</button>');
     if (completed && balance > 0 && can('sales.create')) a.push('<button class="btn-soft" data-act="view-pay" type="button"><i class="ph-duotone ph-hand-coins"></i>Record payment</button>');
+    if (completed && balance > 0 && can('sales.create') && !returns.length && s.customer_id) a.push('<button class="btn-soft" data-act="view-add" type="button"><i class="ph-duotone ph-plus-circle"></i>Add items</button>');
     if (completed && can('sales.refund') && returnable(s)) a.push('<button class="btn-soft" data-act="view-return" type="button"><i class="ph-duotone ph-arrow-u-up-left"></i>Return items</button>');
     if (completed && can('sales.void') && !returns.length) a.push('<button class="btn-soft danger" data-act="view-void" type="button"><i class="ph-duotone ph-prohibit"></i>Void sale</button>');
     if (s.status === 'held' && can('sales.create')) a.push('<button class="btn-soft danger" data-act="delete-held" type="button"><i class="ph-duotone ph-trash"></i>Delete held sale</button>');
@@ -231,6 +232,90 @@
     try {
       await api(`/sales/${state.sale.id}/payments`, { method: 'POST', body: { method: $('p-method').value, amount, reference: $('p-ref').value.trim() || undefined } });
       toast('Payment recorded');
+      await refreshSale();
+    } catch (e) { setBusy(btn, false); formErr(e.message); }
+  }
+
+  // ---- add items to a sale that still has a balance
+  let aiCart = [];    // [{ id, name, sku, price, qty }]
+  let aiHits = [];    // last search results, normalised
+  let aiReq = 0;
+
+  /** One place that maps /products/pos-search rows to what this view needs. Adjust here if the field names differ. */
+  const normProduct = (p) => ({
+    id: p.id != null ? p.id : p.product_id,
+    name: p.name || p.product_name || '',
+    sku: p.sku || '',
+    price: Number(p.price != null ? p.price : (p.selling_price != null ? p.selling_price : p.unit_price)) || 0,
+    stock: p.on_hand != null ? p.on_hand : (p.stock != null ? p.stock : (p.stock_on_hand != null ? p.stock_on_hand : null)),
+  });
+
+  function viewAddItems() {
+    const s = state.sale;
+    aiCart = []; aiHits = []; aiReq++;
+    $('s-body').innerHTML = headHtml(s, 'Add items') +
+      '<button class="back-link" data-act="back" type="button"><i class="ph-bold ph-arrow-left"></i> Back to sale</button>' +
+      '<div class="sm-form"><div class="hd-alert hd-alert-danger mb-3" id="f-err" hidden><i class="ph-duotone ph-warning-circle"></i><span></span></div>' +
+      `<div class="mb-3 fw-bold">Balance due now: ${money2(s.balance)}</div>` +
+      '<label for="ai-search">Find a product</label>' +
+      '<input id="ai-search" class="form-control" type="search" placeholder="Name, SKU or barcode…" autocomplete="off">' +
+      '<div id="ai-results" class="mt-2"></div>' +
+      '<div class="sm-h">Items to add</div><div id="ai-cart"></div>' +
+      '<button class="btn btn-hd btn-lg w-100 mt-4" id="ai-submit" data-act="submit-add" type="button" disabled>Add to sale</button></div>';
+    drawAiCart();
+    const inp = $('ai-search'); if (inp) inp.focus();
+  }
+
+  async function aiSearch(q) {
+    const id = ++aiReq;
+    const box = $('ai-results'); if (!box) return;
+    if (q.length < 2) { aiHits = []; box.innerHTML = ''; return; }
+    try {
+      const res = await api('/products/pos-search?q=' + encodeURIComponent(q));
+      if (id !== aiReq || !$('ai-results')) return;
+      const list = Array.isArray(res) ? res : ((res && (res.items || res.data)) || []);
+      aiHits = list.map(normProduct).filter((p) => p.id != null);
+      box.innerHTML = aiHits.length
+        ? '<div class="sm-list">' + aiHits.slice(0, 8).map((p, i) =>
+          `<div><span><b>${esc(p.name)}</b><small class="d-block">${esc(p.sku)}${p.stock != null ? ' · ' + num(p.stock) + ' in stock' : ''}</small></span>` +
+          `<span class="r">${money2(p.price)} <button class="btn-soft ms-2" data-act="ai-pick" data-i="${i}" type="button"><i class="ph-bold ph-plus"></i>Add</button></span></div>`).join('') + '</div>'
+        : '<div class="small text-muted">No products found</div>';
+    } catch (e) { if (id === aiReq && $('ai-results')) box.innerHTML = `<div class="small text-danger">${esc(e.message)}</div>`; }
+  }
+  const aiSearchDebounced = debounce(aiSearch, 250);
+
+  function drawAiCart() {
+    const box = $('ai-cart'), btn = $('ai-submit'); if (!box) return;
+    if (!aiCart.length) {
+      box.innerHTML = '<div class="small text-muted">Nothing added yet. Search for a product above.</div>';
+      if (btn) btn.disabled = true;
+      return;
+    }
+    const est = aiCart.reduce((t, l) => t + l.price * l.qty, 0);
+    box.innerHTML = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Product</th><th class="num">Qty</th><th class="num">Est. total</th><th></th></tr></thead><tbody>' +
+      aiCart.map((l, i) =>
+        `<tr><td><b>${esc(l.name)}</b><small class="d-block">${esc(l.sku)}</small></td>` +
+        `<td class="num"><input class="form-control d-inline-block ai-qty" data-i="${i}" type="number" min="1" step="1" value="${l.qty}" inputmode="numeric" style="width:84px"></td>` +
+        `<td class="num">${money2(l.price * l.qty)}</td>` +
+        `<td><button class="btn-soft danger" data-act="ai-remove" data-i="${i}" type="button" aria-label="Remove"><i class="ph-bold ph-x"></i></button></td></tr>`).join('') +
+      `</tbody></table></div><div class="small text-muted mt-2">Estimated addition ${money2(est)} (VAT included). The final price is set by the server, including any customer-group price.</div>`;
+    if (btn) btn.disabled = false;
+  }
+
+  function aiPick(i) {
+    const p = aiHits[i]; if (!p) return;
+    const hit = aiCart.find((l) => l.id === p.id);
+    if (hit) hit.qty += 1; else aiCart.push({ id: p.id, name: p.name, sku: p.sku, price: p.price, qty: 1 });
+    drawAiCart();
+  }
+
+  async function submitAddItems(btn) {
+    const items = aiCart.filter((l) => l.qty > 0).map((l) => ({ product_id: l.id, quantity: l.qty }));
+    if (!items.length) return formErr('Add at least one product');
+    setBusy(btn, true, 'Adding…');
+    try {
+      const sale = await api(`/sales/${state.sale.id}/items`, { method: 'POST', body: { items } });
+      toast(`Items added · new balance ${money2(sale.balance)}`);
       await refreshSale();
     } catch (e) { setBusy(btn, false); formErr(e.message); }
   }
@@ -507,6 +592,10 @@
       case 'wa-pdf': shareWaPdf(); break;
       case 'wa-send': sendWhatsApp(); break;
       case 'view-pay': viewPay(); break;
+      case 'view-add': viewAddItems(); break;
+      case 'ai-pick': aiPick(Number(b.dataset.i)); break;
+      case 'ai-remove': aiCart.splice(Number(b.dataset.i), 1); drawAiCart(); break;
+      case 'submit-add': submitAddItems(b); break;
       case 'view-void': viewVoid(); break;
       case 'view-return': viewReturn(); break;
       case 'submit-pay': submitPay(b); break;
@@ -515,6 +604,16 @@
       case 'delete-held': deleteHeld(b); break;
       default: break;
     }
+  });
+
+  $('s-body').addEventListener('input', (e) => {
+    if (e.target.id === 'ai-search') aiSearchDebounced(e.target.value.trim());
+  });
+  $('s-body').addEventListener('change', (e) => {
+    if (!e.target.classList.contains('ai-qty')) return;
+    const l = aiCart[Number(e.target.dataset.i)]; if (!l) return;
+    l.qty = Math.max(1, Math.floor(Number(e.target.value)) || 1);
+    drawAiCart();
   });
 
   $('rows').addEventListener('click', (e) => { const tr = e.target.closest('tr[data-id]'); if (tr) openSale(tr.dataset.id); });

@@ -24,6 +24,16 @@ function parsePayments(list) {
   });
 }
 
+/** Validate a list of sale lines: [{ product_id, quantity, unit_price?, discount_amount? }]. */
+function parseItems(list) {
+  return v.array(list, 'items').map((it, i) => {
+    const line = { product_id: v.id(it.product_id, `items[${i}].product_id`), quantity: v.int(it.quantity, `items[${i}].quantity`, { min: 1 }) };
+    if (it.unit_price !== undefined && it.unit_price !== null) line.unit_price = v.num(it.unit_price, `items[${i}].unit_price`, { min: 0 });
+    if (it.discount_amount) line.discount_amount = v.num(it.discount_amount, `items[${i}].discount_amount`, { min: 0 });
+    return line;
+  });
+}
+
 /**
  * The POS checkout.
  * Body: { customer_id?, items:[{product_id,quantity,unit_price?,discount_amount?}], payments:[{method,amount,reference?}],
@@ -35,12 +45,7 @@ exports.create = wrap(async (req, res) => {
   const b = req.body || {};
   const canDiscount = hasPermission(req.user, 'sales.discount');
 
-  const items = v.array(b.items, 'items').map((it, i) => {
-    const line = { product_id: v.id(it.product_id, `items[${i}].product_id`), quantity: v.int(it.quantity, `items[${i}].quantity`, { min: 1 }) };
-    if (it.unit_price !== undefined && it.unit_price !== null) line.unit_price = v.num(it.unit_price, `items[${i}].unit_price`, { min: 0 });
-    if (it.discount_amount) line.discount_amount = v.num(it.discount_amount, `items[${i}].discount_amount`, { min: 0 });
-    return line;
-  });
+  const items = parseItems(b.items);
 
   const saleDiscount = v.optNum(b.discount_amount, 'discount_amount', { min: 0 }) || 0;
   if ((saleDiscount > 0 || items.some((i) => i.discount_amount > 0)) && !canDiscount) {
@@ -109,6 +114,20 @@ exports.listUnpaid = wrap(async (req, res) => ok(res, await models.sales.listUnp
 exports.addPayment = wrap(async (req, res) => {
   const [p] = parsePayments([req.body || {}]);
   ok(res, await models.sales.addPayment({ sale_id: v.id(req.params.id), ...p, received_by: req.user.id }));
+});
+
+/** Add products to a sale that still has a balance. Body: { items:[{product_id, quantity, unit_price?, discount_amount?}] } */
+exports.addItems = wrap(async (req, res) => {
+  const id = v.id(req.params.id);
+  const items = parseItems((req.body || {}).items);
+  if (items.some((i) => i.discount_amount > 0) && !hasPermission(req.user, 'sales.discount')) {
+    throw forbidden('You are not allowed to give discounts');
+  }
+  const sale = await models.sales.addItems(id, {
+    items, user_id: req.user.id, allow_below_min: hasPermission(req.user, 'products.manage'),
+  });
+  await audit.record(req, 'add_items', 'sale', id, null, { sale_number: sale.sale_number, total: sale.total, items });
+  ok(res, sale);
 });
 
 exports.void = wrap(async (req, res) => {

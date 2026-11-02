@@ -126,7 +126,8 @@ async function recordPayments(c, sale, rawPayments, customer, userId) {
 }
 
 // ------------------------------------------------------------------ finalising (stock + loyalty + payments)
-async function finalise(c, sale, items, { payments, customer, settings, userId }) {
+/** Take each sale_items row out of stock (FEFO for expiry products), one ledger movement per batch slice. */
+async function deductStock(c, sale, items, userId) {
   // Sorted by product so concurrent sales lock rows in the same order (avoids deadlocks).
   const ordered = [...items].sort((a, b) => a.product_id - b.product_id);
   for (const it of ordered) {
@@ -136,6 +137,10 @@ async function finalise(c, sale, items, { payments, customer, settings, userId }
         movement_type: 'sale', unit_cost: it.unit_cost, source_type: 'sale_item', source_id: it.id, created_by: userId });
     }
   }
+}
+
+async function finalise(c, sale, items, { payments, customer, settings, userId }) {
+  await deductStock(c, sale, items, userId);
 
   if (sale.loyalty_points_used > 0) {
     await customers.addLoyalty(c, { customer_id: customer.id, sale_id: sale.id, type: 'redeem', points: -sale.loyalty_points_used, created_by: userId });
@@ -254,6 +259,72 @@ async function addPayment({ sale_id, method, amount, reference, mpesa_transactio
     await query(
       `INSERT INTO payments (sale_id, method, amount, reference, mpesa_transaction_id, received_by) VALUES ($1,$2,$3,$4,$5,$6)`,
       [sale_id, method, amount, reference || null, mpesa_transaction_id || null, received_by || null], c);
+    return getById(sale_id, c);
+  });
+}
+
+// ------------------------------------------------------------------ adding items to an open balance
+/**
+ * Add more products to a completed sale that still has a balance (unpaid or part paid).
+ * items: [{ product_id, quantity, unit_price?, discount_amount? }]; priced exactly like the POS.
+ * Stock is deducted now. Existing lines, the sale-level discount and the loyalty discount are untouched,
+ * so the balance simply grows by the value of the new lines. Blocked once a return exists, because
+ * returns refund a proportional share of the whole sale.
+ */
+async function addItems(sale_id, { items, user_id, allow_below_min }, db) {
+  if (!Array.isArray(items) || !items.length) throw new AppError('Add at least one item', 400, 'NO_ITEMS');
+  return inTx(db, async (c) => {
+    const { rows: [sale] } = await query('SELECT * FROM sales WHERE id = $1 FOR UPDATE', [sale_id], c);
+    if (!sale) throw notFound('Sale');
+    if (sale.status !== 'completed') throw new AppError('Items can only be added to completed sales', 409, 'INVALID_STATE');
+    if (toCents(sale.amount_paid) >= toCents(sale.total)) {
+      throw new AppError('This sale is fully paid. Start a new sale instead', 409, 'FULLY_PAID');
+    }
+    const { rows: [r] } = await query('SELECT COUNT(*)::INT AS n FROM sale_returns WHERE sale_id = $1', [sale_id], c);
+    if (r.n > 0) throw new AppError('This sale already has returns, so items cannot be added', 409, 'HAS_RETURNS');
+    if (!sale.customer_id) throw new AppError('Items can only be added to a sale for a saved customer', 422, 'CUSTOMER_REQUIRED');
+
+    const settings = await settingsModel.get(c);
+    const { rows: [customer] } = await query('SELECT * FROM customers WHERE id = $1 FOR UPDATE', [sale.customer_id], c);
+    if (!customer) throw notFound('Customer');
+
+    const lines = await priceLines(c, items, customer, { allow_below_min });
+    const added = lines.reduce((s, l) => s + l.lineTotal, 0);
+
+    const newSubtotal = toCents(sale.subtotal) + added;
+    const newTotal = newSubtotal - toCents(sale.discount_amount) - toCents(sale.loyalty_discount);
+    const unpaidAfter = newTotal - toCents(sale.amount_paid);
+
+    // The extra credit has to fit inside the customer's limit, same rule as the POS.
+    const { rows: [b] } = await query(
+      `SELECT COALESCE(SUM(total - amount_paid), 0) AS outstanding FROM sales
+        WHERE customer_id = $1 AND status = 'completed' AND amount_paid < total AND id <> $2`, [customer.id, sale_id], c);
+    if (toCents(b.outstanding) + unpaidAfter > toCents(customer.credit_limit)) {
+      throw new AppError('Credit limit exceeded for this customer', 409, 'CREDIT_LIMIT_EXCEEDED',
+        { credit_limit: customer.credit_limit, outstanding: b.outstanding, this_sale_unpaid: fromCents(unpaidAfter) });
+    }
+
+    const newRows = [];
+    for (const l of lines) {
+      const { rows: [row] } = await query(
+        `INSERT INTO sale_items (sale_id, product_id, quantity, unit_price, unit_cost, discount_amount, tax_rate, tax_amount, line_total)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [sale_id, l.product.id, l.quantity, fromCents(l.unitCents), fromCents(l.unitCostCents), fromCents(l.discountCents),
+          l.taxRate, fromCents(l.taxCents), fromCents(l.lineTotal)], c);
+      newRows.push(row);
+    }
+    await deductStock(c, sale, newRows, user_id);
+
+    // Same proportional VAT rule as computeTotals, using every line now on the sale.
+    const { rows: [tx] } = await query('SELECT COALESCE(SUM(tax_amount), 0) AS raw_tax FROM sale_items WHERE sale_id = $1', [sale_id], c);
+    const newTax = newSubtotal > 0 ? Math.round((toCents(tx.raw_tax) * newTotal) / newSubtotal) : 0;
+    await query('UPDATE sales SET subtotal = $2, total = $3, tax_total = $4 WHERE id = $1',
+      [sale_id, fromCents(newSubtotal), fromCents(newTotal), fromCents(newTax)], c);
+
+    // Points are earned on the sale total, so earn on the increase.
+    const earned = Math.floor(Number(fromCents(newTotal - toCents(sale.total))) * Number(settings.loyalty_points_per_kes));
+    if (earned > 0) await customers.addLoyalty(c, { customer_id: customer.id, sale_id, type: 'earn', points: earned, created_by: user_id });
+
     return getById(sale_id, c);
   });
 }
@@ -413,4 +484,4 @@ async function listUnpaid(db) {
   return rows;
 }
 
-module.exports = { createSale, completeHeld, deleteHeld, addPayment, voidSale, createReturn, getReturn, getById, list, listHeld, listUnpaid };
+module.exports = { createSale, completeHeld, deleteHeld, addPayment, addItems, voidSale, createReturn, getReturn, getById, list, listHeld, listUnpaid };
