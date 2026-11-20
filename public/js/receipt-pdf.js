@@ -76,9 +76,9 @@
     /** Value written on a form line: shrinks to fit, sits just above the line. */
     const field = (str, x1, x2, yLine, size, style) => {
       str = t(str); if (!str) return;
-      let sz = size || 9; font(style || 'normal', sz);
+      let sz = size || 8; font(style || 'normal', sz);
       while (sz > 6 && doc.getTextWidth(str) > P(x2 - x1 - 12)) { sz -= 0.5; font(style || 'normal', sz); }
-      ink(INK); doc.text(clip(str, x2 - x1 - 12), P(x1 + 8), P(yLine - 6));
+      ink(INK); doc.text(clip(str, x2 - x1 - 12), P(x1 + 8), P(yLine - 5));
     };
     const icon = (kind, cx, cy) => {
       fill(NAVY); doc.circle(P(cx), P(cy), P(15), 'F');
@@ -115,34 +115,36 @@
       else { font('bolditalic', 26); ink(NAVY); text('HASSDENT', 250, 170); font('normal', 11); ink(TEAL); text('DENTAL SUPPLIES LTD', 250, 215); }
 
       icon('home', 800, 140);
-      font('normal', 8); ink(INK);
-      const aLines = doc.splitTextToSize(t(addr), P(205)).slice(0, 5);
+      font('normal', 6.5); ink(INK);
+      const aLines = (!shop.address || /mercantile house/i.test(shop.address))
+        ? ['Mercantile House,', '1st Floor, Room 137,', 'Koinange Street', 'P.O. Box 34363 - 00100,', 'Nairobi, Kenya']
+        : doc.splitTextToSize(t(addr), P(215)).slice(0, 5);
       aLines.forEach((ln, i) => doc.text(ln, P(824), P(147 + i * 31)));
       if (shop.kra_pin && aLines.length < 5) doc.text('PIN: ' + t(shop.kra_pin), P(824), P(147 + aLines.length * 31));
       vline(1049, 124, 272, NAVY, 0.2);
-      font('normal', 8.5); ink(NAVY);
+      font('normal', 6.5); ink(NAVY);
       [['phone', shop.phone || DEF.phone], ['mail', emails[0]], ['mail', emails[1]], ['globe', shop.website || DEF.web]].forEach(([k, v], i) => {
         if (!v) return;
-        const cy = 137 + i * 40; icon(k, 1090, cy); font('normal', 8.5); ink(NAVY); text(v, 1119, cy + 5);
+        const cy = 137 + i * 40; icon(k, 1090, cy); font('normal', 6.5); ink(NAVY); text(v, 1119, cy + 4);
       });
 
       // ---- title + number + date
-      font('bold', 23); ink(NAVY); text('RECEIPT', 58, 343);
-      font('bold', 11); text('No.', 796, 341); hline(846, 1023, 344);
-      field(s.sale_number, 846, 1023, 344, 10, 'bold');
-      text('Date:', 1123, 341);
+      font('bold', 21); ink(NAVY); text('RECEIPT', 58, 343);
+      font('bold', 8.5); text('No.', 796, 339); hline(846, 1023, 344);
+      field(s.sale_number, 846, 1023, 344, 8, 'bold');
+      text('Date:', 1123, 339);
       hline(1196, 1250, 344); hline(1274, 1329, 344); hline(1378, 1436, 344);
-      font('normal', 11); ink(NAVY); text('/', 1257, 341); text('/ 20', 1337, 341);
-      field(d.day, 1196, 1250, 344, 10); field(d.month, 1274, 1329, 344, 10); field(String(d.year || '').slice(-2), 1378, 1436, 344, 10);
+      font('normal', 8.5); ink(NAVY); text('/', 1257, 339); text('/ 20', 1337, 339);
+      field(d.day, 1196, 1250, 344, 8); field(d.month, 1274, 1329, 344, 8); field(String(d.year || '').slice(-2), 1378, 1436, 344, 8);
 
       // ---- received from / sum / payment for
-      font('normal', 10); ink(INK);
-      text('Received from:', 58, 391); hline(205, 1436, 395);
-      field(s.customer_name || 'Walk-in', 205, 1436, 395, 10);
-      font('normal', 10); ink(INK); text('The sum of Ksh:', 58, 439); hline(205, 733, 442);
-      field(n2(s.amount_paid != null ? s.amount_paid : s.total), 205, 733, 442, 10, 'bold');
-      font('normal', 10); ink(INK); text('Being payment for:', 774, 439); hline(948, 1436, 442);
-      field('Goods sold - ' + (s.sale_number || ''), 948, 1436, 442, 9);
+      font('normal', 7.5); ink(INK);
+      text('Received from:', 58, 390); hline(205, 1436, 395);
+      field(s.customer_name || 'Walk-in', 205, 1436, 395, 8);
+      font('normal', 7.5); ink(INK); text('The sum of Ksh:', 58, 437); hline(205, 733, 442);
+      field(n2(s.amount_paid != null ? s.amount_paid : s.total), 205, 733, 442, 8, 'bold');
+      font('normal', 7.5); ink(INK); text('Being payment for:', 774, 437); hline(948, 1436, 442);
+      field('Goods sold - ' + (s.sale_number || ''), 948, 1436, 442, 8);
 
       // ---- items table
       const n = final ? Math.max(7, rows.length) : rows.length;
@@ -152,11 +154,11 @@
       for (let i = 1; i <= n; i++) hline(tb.x, tb.x + tb.w, tb.y + tb.hh + i * tb.rh - tb.rh, NAVY, 0.15);
       [165, 979, 1212].forEach((x) => vline(x, tb.y + 2, tb.y + th, NAVY, 0.2));
       draw(NAVY, 0.3); doc.roundedRect(P(tb.x), P(tb.y), P(tb.w), P(th), P(8), P(8), 'S');
-      font('bold', 8.5); ink(WHITE);
+      font('bold', 6.8); ink(WHITE);
       [['QTY', 107], ['ITEM DESCRIPTION', 572], ['UNIT PRICE (KSH)', 1096], ['AMOUNT (KSH)', 1324]].forEach(([l, x]) => text(l, x, tb.y + 21, { align: 'center' }));
       rows.forEach((it, i) => {
         const by = tb.y + tb.hh + i * tb.rh + 22;
-        font('normal', 8.5); ink(INK);
+        font('normal', 7.5); ink(INK);
         text(String(it.quantity), 107, by, { align: 'center' });
         doc.text(clip(it.product_name, 790), P(178), P(by));
         text(n2(it.unit_price), 1198, by, { align: 'right' });
@@ -168,25 +170,25 @@
       } else {
         // ---- payment method
         fill(TEAL); doc.roundedRect(P(50), P(763), P(210), P(31), P(8), P(8), 'F');
-        font('bold', 8.5); ink(WHITE); text('PAYMENT METHOD', 78, 784);
-        if (refs.length) { font('normal', 7); ink(GREY); doc.text(clip('Ref: ' + refs.join(', '), 235), P(275), P(784)); }
+        font('bold', 7); ink(WHITE); text('PAYMENT METHOD', 78, 783);
+        if (refs.length) { font('normal', 6.5); ink(GREY); doc.text(clip('Ref: ' + refs.join(', '), 235), P(275), P(784)); }
         [['Cash', 51, 'cash'], ['Mpesa', 147, 'mpesa'], ['Bank Transfer', 252, 'bank_transfer'], ['Cheque', 406, null]].forEach(([l, x, k]) => {
           draw(NAVY, 0.25); doc.rect(P(x), P(824), P(18), P(18), 'S');
           if (k && used.has(k)) tick(x, 824);
-          font('normal', 9.5); ink(INK); text(l, x + 25, 839);
+          font('normal', 7.2); ink(INK); text(l, x + 25, 838);
         });
         draw(NAVY, 0.25); doc.rect(P(51), P(873), P(18), P(18), 'S');
         if (others.length) tick(51, 873);
-        font('normal', 9.5); ink(INK); text('Other:', 76, 888); hline(142, 493, 892);
-        if (others.length) field(others.join(', '), 142, 493, 892, 9);
+        font('normal', 7.2); ink(INK); text('Other:', 76, 887); hline(142, 493, 892);
+        if (others.length) field(others.join(', '), 142, 493, 892, 8);
         vline(521, 775, 892, TEAL, 0.25);
-        font('bold', 8.5); ink(NAVY);
-        text('PAID BY:', 548, 790); hline(635, 955, 794); field(s.customer_name || 'Walk-in', 635, 955, 794, 9);
-        font('bold', 8.5); ink(NAVY); text('ID / NO.:', 548, 840); hline(635, 955, 844);
-        text('SIGNATURE:', 548, 889); hline(664, 955, 892);
-        font('normal', 10); ink(INK); text('Received by:', 58, 969); hline(183, 481, 970);
-        field(s.sold_by_name || '', 183, 481, 970, 9);
-        font('bold', 7.5); ink(NAVY);
+        font('bold', 7); ink(NAVY);
+        text('PAID BY:', 548, 789); hline(635, 955, 794); field(s.customer_name || 'Walk-in', 635, 955, 794, 8);
+        font('bold', 7); ink(NAVY); text('ID / NO.:', 548, 839); hline(635, 955, 844);
+        text('SIGNATURE:', 548, 887); hline(664, 955, 892);
+        font('normal', 7.5); ink(INK); text('Received by:', 58, 965); hline(183, 481, 970);
+        field(s.sold_by_name || '', 183, 481, 970, 8);
+        font('bold', 6.5); ink(NAVY);
         let ny = 965;
         if (shop.paybill) { text('M-PESA PAYBILL ' + shop.paybill + (shop.paybill_account ? '  |  ACC ' + shop.paybill_account : ''), 548, ny); ny += 20; }
         if (shop.kra_pin && aLines.length >= 5) { font('normal', 7.5); ink(GREY); text('PIN: ' + shop.kra_pin, 548, ny); }
@@ -197,14 +199,14 @@
           const y0 = 749 + i * 38.4;
           fill(k === 2 ? TEAL : PALE); doc.rect(P(1010), P(y0), P(201), P(38.4), 'F');
           draw(NAVY, 0.25); doc.rect(P(1010), P(y0), P(201), P(38.4), 'S'); doc.rect(P(1211), P(y0), P(226), P(38.4), 'S');
-          font(k ? 'bold' : 'normal', 9); ink(k === 2 ? WHITE : k === 1 ? TEAL : NAVY); text(l, 1180, y0 + 25, { align: 'right' });
-          font(k ? 'bold' : 'normal', 10); ink(INK); text(v, 1424, y0 + 25, { align: 'right' });
+          font(k ? 'bold' : 'normal', 7.5); ink(k === 2 ? WHITE : k === 1 ? TEAL : NAVY); text(l, 1180, y0 + 25, { align: 'right' });
+          font(k ? 'bold' : 'normal', 8.5); ink(INK); text(v, 1424, y0 + 25, { align: 'right' });
         });
-        if (Number(s.tax_total) > 0) { font('normal', 7); ink(GREY); text('Includes VAT of KSh ' + n2(s.tax_total), 1437, 962, { align: 'right' }); }
+        if (Number(s.tax_total) > 0) { font('normal', 6.5); ink(GREY); text('Includes VAT of KSh ' + n2(s.tax_total), 1437, 962, { align: 'right' }); }
 
         // ---- footer
         hline(25, 531, 1013, TEAL, 0.25); hline(953, 1459, 1013, TEAL, 0.25);
-        font('italic', 14); ink(TEAL); text(shop.footer || 'Thank you for your business!', 742, 1021, { align: 'center' });
+        doc.setFont('times', 'italic'); doc.setFontSize(13); ink(TEAL); text(shop.footer || 'Thank you for your business!', 742, 1021, { align: 'center' });
       }
 
       if (s.status === 'voided') {

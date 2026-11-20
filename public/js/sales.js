@@ -411,29 +411,36 @@
     .pg:last-child { page-break-after: auto; break-after: auto; }
     .pg > * { position: absolute; }
     .navy { color: #14275f; } .teal { color: #01819c; }
-    .lb { font-size: 10pt; line-height: ${u(24)}; white-space: nowrap; }
-    .fl { height: ${u(28)}; border-bottom: .25mm solid #14275f; padding: 0 ${u(8)} ${u(3)}; display: flex; align-items: flex-end; font-size: 9.5pt; overflow: hidden; white-space: nowrap; }
-    .fl > span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-    .addr { font-size: 8pt; line-height: ${u(31)}; width: ${u(205)}; }
-    .ct { font-size: 8.5pt; color: #14275f; line-height: ${u(30)}; white-space: nowrap; }
+    /* one flex row per "label ........ value" so label and value always share a baseline */
+    .fr { display: flex; align-items: flex-end; height: ${u(20)}; font-size: 7.5pt; line-height: ${u(20)}; white-space: nowrap; }
+    .fr .lab { flex: none; overflow: hidden; }
+    .fr .val { flex: 1; min-width: 0; height: 100%; padding-left: ${u(8)}; padding-right: ${u(4)}; overflow: hidden; text-overflow: ellipsis; background: linear-gradient(#14275f, #14275f) 0 100% / 100% .25mm no-repeat; }
+    .fr .val.c { text-align: center; padding: 0; }
+    .fr .bn { font-weight: 700; color: #14275f; font-size: 7pt; }
+    .fr .bm { font-weight: 700; color: #14275f; font-size: 8.5pt; }
+    .fr .vm { font-size: 8.5pt; }
+    .fr .b { font-weight: 700; }
+    .addr { font-size: 6.5pt; line-height: ${u(31)}; width: ${u(225)}; white-space: nowrap; }
+    .ct { font-size: 6.5pt; color: #14275f; line-height: ${u(30)}; white-space: nowrap; }
     .tbw { border: .3mm solid #14275f; border-radius: ${u(8)}; overflow: hidden; }
     .tbw table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .tbw th { background: #14275f; color: #fff; font-size: 8.5pt; font-weight: 700; height: ${u(31)}; padding: 0; text-align: center; }
-    .tbw td { height: ${u(34)}; padding: 0 ${u(12)}; border-top: .15mm solid #14275f; border-left: .2mm solid #14275f; font-size: 8.5pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tbw th { background: #14275f; color: #fff; font-size: 6.8pt; font-weight: 700; height: ${u(31)}; padding: 0; text-align: center; }
+    .tbw td { height: ${u(34)}; padding: 0 ${u(12)}; border-top: .15mm solid #14275f; border-left: .2mm solid #14275f; font-size: 7.5pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tbw td:first-child { border-left: 0; text-align: center; padding: 0; }
     .tbw td.n { text-align: right; }
-    .pill { background: #01819c; color: #fff; font-size: 8.5pt; font-weight: 700; border-radius: ${u(8)}; height: ${u(31)}; line-height: ${u(31)}; padding-left: ${u(28)}; }
-    .cb { width: ${u(18)}; height: ${u(18)}; border: .25mm solid #14275f; }
+    .pill { background: #01819c; color: #fff; font-size: 7pt; font-weight: 700; border-radius: ${u(8)}; height: ${u(31)}; line-height: ${u(31)}; padding-left: ${u(28)}; white-space: nowrap; }
+    .cb { flex: none; width: ${u(18)}; height: ${u(18)}; border: .25mm solid #14275f; }
     .cb svg { display: block; width: 100%; height: 100%; }
-    .sg { font-size: 8.5pt; font-weight: 700; color: #14275f; line-height: ${u(24)}; white-space: nowrap; }
+    .opt { display: flex; align-items: center; gap: ${u(7)}; height: ${u(18)}; font-size: 7.2pt; white-space: nowrap; }
+    .sg { font-size: 6.5pt; font-weight: 700; color: #14275f; line-height: ${u(24)}; white-space: nowrap; }
     .tot { border: .25mm solid #14275f; }
     .tot .r { display: flex; height: ${u(38.4)}; border-top: .25mm solid #14275f; }
     .tot .r:first-child { border-top: 0; }
-    .tot .l { width: ${u(201)}; background: #dcecf5; text-align: right; padding-right: ${u(31)}; font-size: 9pt; color: #14275f; display: flex; align-items: center; justify-content: flex-end; }
-    .tot .v { flex: 1; border-left: .25mm solid #14275f; text-align: right; padding-right: ${u(13)}; font-size: 10pt; display: flex; align-items: center; justify-content: flex-end; }
+    .tot .l { width: ${u(201)}; background: #dcecf5; text-align: right; padding-right: ${u(31)}; font-size: 7.5pt; color: #14275f; display: flex; align-items: center; justify-content: flex-end; }
+    .tot .v { flex: 1; border-left: .25mm solid #14275f; text-align: right; padding-right: ${u(13)}; font-size: 8.5pt; display: flex; align-items: center; justify-content: flex-end; }
     .tot .r.t .l { font-weight: 700; color: #01819c; } .tot .r.t .v, .tot .r.d .v { font-weight: 700; }
     .tot .r.d .l { background: #01819c; color: #fff; font-weight: 700; }
-    .small { font-size: 7pt; color: #6e7486; white-space: nowrap; }
+    .small { font-size: 6.5pt; color: #6e7486; white-space: nowrap; }
     .stamp { left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-18deg); border: 1.2mm solid #b00020; color: #b00020; font-size: 56pt; font-weight: 700; letter-spacing: 2mm; padding: 1mm 8mm; opacity: .2; white-space: nowrap; }
   `;
 
@@ -457,7 +464,7 @@
   function receiptBody({ shop, sale: s }) {
     shop = shop || {};
     const A = (cls, x, y, inner, extra) => `<div class="${cls}" style="left:${u(x)};top:${u(y)};${extra || ''}">${inner}</div>`;
-    const line = (x1, x2, yLine, val, extra) => `<div class="fl" style="left:${u(x1)};top:${u(yLine - 28)};width:${u(x2 - x1)};${extra || ''}"><span>${val == null ? '' : esc(val)}</span></div>`;
+    const fr = (xLab, xLine, xEnd, yLine, label, val, lab, valCls) => `<div class="fr" style="left:${u(xLab)};top:${u(yLine - 20)};width:${u(xEnd - xLab)}"><span class="lab ${lab || ''}" style="width:${u(xLine - xLab)}">${label}</span><span class="val ${valCls || ''}">${val == null ? '' : esc(val)}</span></div>`;
     const pays = (s.payments || []).filter((p) => p.status === 'completed');
     const completed = s.status === 'completed';
     const balance = completed ? (Number(s.balance) || 0) : 0;
@@ -469,7 +476,7 @@
     const emails = [shop.email || RDEF.email, RDEF.email2].filter((e, i, a) => e && a.indexOf(e) === i).slice(0, 2);
     const disc = (Number(s.discount_amount) || 0) + (Number(s.loyalty_discount) || 0);
     const tick = '<svg viewBox="0 0 18 18"><polyline points="3,9 7.5,14 15,4" fill="none" stroke="#01819c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    const box = (x, y, on) => A('cb', x, y, on ? tick : '');
+    const opt = (x, label, on) => A('opt', x, 824, `<span class="cb">${on ? tick : ''}</span><span>${label}</span>`);
     const pageList = receiptPages(s.items);
 
     const head = `
@@ -482,19 +489,15 @@
       </svg>
       <img src="${location.origin}/img/receipt-logo.png" alt="HassDent" style="left:${u(50)};top:${u(70)};width:${u(622)};height:${u(162)}">
       ${rIcon('home', 800, 140)}
-      ${A('addr', 824, 128, esc(shop.address || RDEF.address) + (shop.kra_pin ? '<br>PIN: ' + esc(shop.kra_pin) : ''))}
+      ${A('addr', 824, 128, (!shop.address || /mercantile house/i.test(shop.address) ? ['Mercantile House,', '1st Floor, Room 137,', 'Koinange Street', 'P.O. Box 34363 - 00100,', 'Nairobi, Kenya'].join('<br>') : esc(shop.address)) + (shop.kra_pin ? '<br>PIN: ' + esc(shop.kra_pin) : ''))}
       <div style="left:${u(1049)};top:${u(124)};height:${u(148)};border-left:.2mm solid #14275f"></div>
       ${[['phone', shop.phone || RDEF.phone], ['mail', emails[0]], ['mail', emails[1]], ['globe', shop.website || RDEF.web]].map(([k, v], i) => v ? rIcon(k, 1090, 137 + i * 40) + A('ct', 1119, 122 + i * 40, esc(v)) : '').join('')}
-      ${A('navy', 58, 300, 'RECEIPT', `font-size:23pt;font-weight:700;line-height:${u(60)}`)}
-      ${A('navy', 796, 320, 'No.', `font-size:11pt;font-weight:700;line-height:${u(28)}`)}
-      ${line(846, 1023, 344, s.sale_number, 'font-weight:700')}
-      ${A('navy', 1123, 320, 'Date:', `font-size:11pt;font-weight:700;line-height:${u(28)}`)}
-      ${line(1196, 1250, 344, dt.day)}${A('navy', 1256, 320, '/', `font-size:11pt;line-height:${u(28)}`)}
-      ${line(1274, 1329, 344, dt.month)}${A('navy', 1337, 320, '/ 20', `font-size:11pt;line-height:${u(28)}`)}
-      ${line(1378, 1436, 344, String(dt.year || '').slice(-2))}
-      ${A('lb', 58, 372, 'Received from:')}${line(205, 1436, 395, s.customer_name || 'Walk-in')}
-      ${A('lb', 58, 420, 'The sum of Ksh:')}${line(205, 733, 442, money2(s.amount_paid != null ? s.amount_paid : s.total).replace(/^[^\d-]+/, ''), 'font-weight:700')}
-      ${A('lb', 774, 420, 'Being payment for:')}${line(948, 1436, 442, 'Goods sold - ' + (s.sale_number || ''))}`;
+      ${A('navy', 58, 300, 'RECEIPT', `font-size:21pt;font-weight:700;line-height:${u(60)}`)}
+      ${fr(796, 846, 1023, 344, 'No.', s.sale_number, 'bm', 'vm b')}
+      <div class="fr" style="left:${u(1123)};top:${u(324)};width:${u(313)}"><span class="lab bm" style="width:${u(73)}">Date:</span><span class="val c vm" style="flex:none;width:${u(54)}">${dt.day}</span><span class="lab navy vm" style="width:${u(24)};text-align:center">/</span><span class="val c vm" style="flex:none;width:${u(55)}">${dt.month}</span><span class="lab navy vm" style="width:${u(49)};padding-left:${u(8)}">/ 20</span><span class="val c vm">${esc(String(dt.year || '').slice(-2))}</span></div>
+      ${fr(58, 205, 1436, 395, 'Received from:', s.customer_name || 'Walk-in')}
+      ${fr(58, 205, 733, 442, 'The sum of Ksh:', money2(s.amount_paid != null ? s.amount_paid : s.total).replace(/^[^\d-]+/, ''), '', 'b')}
+      ${fr(774, 948, 1436, 442, 'Being payment for:', 'Goods sold - ' + (s.sale_number || ''))}`;
 
     const plain = (v) => money2(v).replace(/^[^\d-]+/, '');
     return pageList.map((rows, pi) => {
@@ -515,18 +518,15 @@
         ? A('small', 742 - 120, 984, 'Continued on next page...', `width:${u(240)};text-align:center;font-style:italic;font-size:9pt`)
         : `
         ${A('pill', 50, 763, 'PAYMENT METHOD', `width:${u(210)}`)}
-        ${refs.length ? A('small', 275, 770, esc('Ref: ' + refs.join(', ')), `width:${u(235)};overflow:hidden;text-overflow:ellipsis`) : ''}
-        ${box(51, 824, used.has('cash'))}${A('lb', 76, 820, 'Cash')}
-        ${box(147, 824, used.has('mpesa'))}${A('lb', 172, 820, 'Mpesa')}
-        ${box(252, 824, used.has('bank_transfer'))}${A('lb', 277, 820, 'Bank Transfer')}
-        ${box(406, 824, false)}${A('lb', 431, 820, 'Cheque')}
-        ${box(51, 873, others.length > 0)}${A('lb', 76, 869, 'Other:')}${line(142, 493, 892, others.join(', '))}
+        ${refs.length ? A('small', 275, 772, esc('Ref: ' + refs.join(', ')), `width:${u(235)};overflow:hidden;text-overflow:ellipsis`) : ''}
+        ${opt(51, 'Cash', used.has('cash'))}${opt(147, 'Mpesa', used.has('mpesa'))}${opt(252, 'Bank Transfer', used.has('bank_transfer'))}${opt(406, 'Cheque', false)}
+        <div class="fr" style="left:${u(51)};top:${u(873)};width:${u(442)};height:${u(19)}"><span class="cb">${others.length ? tick : ''}</span><span class="lab" style="width:${u(142 - 69)};padding-left:${u(7)}">Other:</span><span class="val">${esc(others.join(', '))}</span></div>
         <div style="left:${u(521)};top:${u(775)};height:${u(117)};border-left:.25mm solid #01819c"></div>
-        ${A('sg', 548, 771, 'PAID BY:')}${line(635, 955, 794, s.customer_name || 'Walk-in')}
-        ${A('sg', 548, 821, 'ID / NO.:')}${line(635, 955, 844, '')}
-        ${A('sg', 548, 870, 'SIGNATURE:')}${line(664, 955, 892, '')}
-        ${A('lb', 58, 950, 'Received by:')}${line(183, 481, 970, s.sold_by_name || '')}
-        ${shop.paybill ? A('sg', 548, 950, 'M-PESA PAYBILL ' + esc(shop.paybill) + (shop.paybill_account ? ' &nbsp;|&nbsp; ACC ' + esc(shop.paybill_account) : ''), 'font-size:7.5pt') : ''}
+        ${fr(548, 635, 955, 794, 'PAID BY:', s.customer_name || 'Walk-in', 'bn')}
+        ${fr(548, 635, 955, 844, 'ID / NO.:', '', 'bn')}
+        ${fr(548, 664, 955, 892, 'SIGNATURE:', '', 'bn')}
+        ${fr(58, 183, 481, 970, 'Received by:', s.sold_by_name || '')}
+        ${shop.paybill ? A('sg', 548, 948, 'M-PESA PAYBILL ' + esc(shop.paybill) + (shop.paybill_account ? ' &nbsp;|&nbsp; ACC ' + esc(shop.paybill_account) : '')) : ''}
         <div class="tot" style="left:${u(1010)};top:${u(749)};width:${u(427)}">
           <div class="r"><div class="l">SUBTOTAL</div><div class="v">${plain(s.subtotal)}</div></div>
           <div class="r"><div class="l">DISCOUNT</div><div class="v">${plain(disc)}</div></div>
@@ -537,7 +537,7 @@
         ${Number(s.tax_total) > 0 ? A('small', 1010, 949, 'Includes VAT of KSh ' + plain(s.tax_total), `width:${u(427)};text-align:right`) : ''}
         <div style="left:${u(25)};top:${u(1013)};width:${u(506)};border-top:.25mm solid #01819c"></div>
         <div style="left:${u(953)};top:${u(1013)};width:${u(506)};border-top:.25mm solid #01819c"></div>
-        ${A('teal', 531, 985, esc(shop.footer || 'Thank you for your business!'), `width:${u(422)};text-align:center;font:italic 14pt Georgia,'Times New Roman',serif;line-height:${u(56)}`)}`;
+        ${A('teal', 531, 985, esc(shop.footer || 'Thank you for your business!'), `width:${u(422)};white-space:nowrap;text-align:center;font:italic 11pt Georgia,'Times New Roman',serif;line-height:${u(56)}`)}`;
 
       return `<div class="pg">${head}${table}${foot}${s.status === 'voided' ? '<div class="stamp">VOIDED</div>' : ''}</div>`;
     }).join('');
