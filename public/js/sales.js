@@ -547,7 +547,7 @@
 
   function receiptDoc(r) {
     return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.sale.sale_number)}</title><style>
-      @page { size: 210mm 148mm; margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
+      @page { size: A5 landscape; margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
   }
 
   async function printReceipt(btn) {
