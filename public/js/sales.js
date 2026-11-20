@@ -489,10 +489,10 @@
       </svg>
       <img src="${location.origin}/img/receipt-logo.png" alt="HassDent" style="left:${u(50)};top:${u(70)};width:${u(622)};height:${u(162)}">
       ${rIcon('home', 800, 140)}
-      ${A('addr', 824, 128, (!shop.address || /mercantile house/i.test(shop.address) ? ['Mercantile House,', '1st Floor, Room 137,', 'Koinange Street', 'P.O. Box 34363 - 00100,', 'Nairobi, Kenya'].join('<br>') : esc(shop.address)) + (shop.kra_pin ? '<br>PIN: ' + esc(shop.kra_pin) : ''))}
+      ${A('addr', 824, 128, 'ZAFANANA BUS<br>Rooms.G3 tolmon,<br>Eastleigh 12 street<br>P.o box 0234<br>Nairobi kenya' + (shop.kra_pin ? '<br>PIN: ' + esc(shop.kra_pin) : ''))}
       <div style="left:${u(1049)};top:${u(124)};height:${u(148)};border-left:.2mm solid #14275f"></div>
       ${[['phone', shop.phone || RDEF.phone], ['mail', emails[0]], ['mail', emails[1]], ['globe', shop.website || RDEF.web]].map(([k, v], i) => v ? rIcon(k, 1090, 137 + i * 40) + A('ct', 1119, 122 + i * 40, esc(v)) : '').join('')}
-      ${A('navy', 58, 300, 'RECEIPT', `font-size:21pt;font-weight:700;line-height:${u(60)}`)}
+      ${A('navy', 58, 300, 'INVOICE', `font-size:21pt;font-weight:700;line-height:${u(60)}`)}
       ${fr(796, 846, 1023, 344, 'No.', s.sale_number, 'bm', 'vm b')}
       <div class="fr" style="left:${u(1123)};top:${u(324)};width:${u(313)}"><span class="lab bm" style="width:${u(73)}">Date:</span><span class="val c vm" style="flex:none;width:${u(54)}">${dt.day}</span><span class="lab navy vm" style="width:${u(24)};text-align:center">/</span><span class="val c vm" style="flex:none;width:${u(55)}">${dt.month}</span><span class="lab navy vm" style="width:${u(49)};padding-left:${u(8)}">/ 20</span><span class="val c vm">${esc(String(dt.year || '').slice(-2))}</span></div>
       ${fr(58, 205, 1436, 395, 'Received from:', s.customer_name || 'Walk-in')}
@@ -526,7 +526,8 @@
         ${fr(548, 635, 955, 844, 'ID / NO.:', '', 'bn')}
         ${fr(548, 664, 955, 892, 'SIGNATURE:', '', 'bn')}
         ${fr(58, 183, 481, 970, 'Received by:', s.sold_by_name || '')}
-        ${shop.paybill ? A('sg', 548, 948, 'M-PESA PAYBILL ' + esc(shop.paybill) + (shop.paybill_account ? ' &nbsp;|&nbsp; ACC ' + esc(shop.paybill_account) : '')) : ''}
+        ${A('sg', 548, 951, 'BUY GOODS TILL: 4978075 &nbsp;|&nbsp; SEND MONEY: 0722902923')}
+        ${A('sg', 548, 971, 'KCB PAYBILL: 522522 &nbsp;|&nbsp; ACC NO: 7884551')}
         <div class="tot" style="left:${u(1010)};top:${u(749)};width:${u(427)}">
           <div class="r"><div class="l">SUBTOTAL</div><div class="v">${plain(s.subtotal)}</div></div>
           <div class="r"><div class="l">DISCOUNT</div><div class="v">${plain(disc)}</div></div>
@@ -546,7 +547,7 @@
   async function fetchReceipt() { return api(`/sales/${state.sale.id}/receipt`); }
 
   function receiptDoc(r) {
-    return `<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title><style>
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Invoice</title><style>
       @page { size: A5 landscape; margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
   }
 

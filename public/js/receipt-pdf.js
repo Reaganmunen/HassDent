@@ -116,9 +116,7 @@
 
       icon('home', 800, 140);
       font('normal', 6.5); ink(INK);
-      const aLines = (!shop.address || /mercantile house/i.test(shop.address))
-        ? ['Mercantile House,', '1st Floor, Room 137,', 'Koinange Street', 'P.O. Box 34363 - 00100,', 'Nairobi, Kenya']
-        : doc.splitTextToSize(t(addr), P(215)).slice(0, 5);
+      const aLines = ['ZAFANANA BUS', 'Rooms.G3 tolmon,', 'Eastleigh 12 street', 'P.o box 0234', 'Nairobi kenya'];
       aLines.forEach((ln, i) => doc.text(ln, P(824), P(147 + i * 31)));
       if (shop.kra_pin && aLines.length < 5) doc.text('PIN: ' + t(shop.kra_pin), P(824), P(147 + aLines.length * 31));
       vline(1049, 124, 272, NAVY, 0.2);
@@ -129,7 +127,7 @@
       });
 
       // ---- title + number + date
-      font('bold', 21); ink(NAVY); text('RECEIPT', 58, 343);
+      font('bold', 21); ink(NAVY); text('INVOICE', 58, 343);
       font('bold', 8.5); text('No.', 796, 339); hline(846, 1023, 344);
       field(s.sale_number, 846, 1023, 344, 8, 'bold');
       text('Date:', 1123, 339);
@@ -189,9 +187,9 @@
         font('normal', 7.5); ink(INK); text('Received by:', 58, 965); hline(183, 481, 970);
         field(s.sold_by_name || '', 183, 481, 970, 8);
         font('bold', 6.5); ink(NAVY);
-        let ny = 965;
-        if (shop.paybill) { text('M-PESA PAYBILL ' + shop.paybill + (shop.paybill_account ? '  |  ACC ' + shop.paybill_account : ''), 548, ny); ny += 20; }
-        if (shop.kra_pin && aLines.length >= 5) { font('normal', 7.5); ink(GREY); text('PIN: ' + shop.kra_pin, 548, ny); }
+        text('BUY GOODS TILL: 4978075   |   SEND MONEY: 0722902923', 548, 963);
+        text('KCB PAYBILL: 522522   |   ACC NO: 7884551', 548, 983);
+        if (shop.kra_pin && aLines.length >= 5) { font('normal', 6.5); ink(GREY); text('PIN: ' + shop.kra_pin, 548, 1002); }
 
         // ---- totals
         const disc = (Number(s.discount_amount) || 0) + (Number(s.loyalty_discount) || 0);
