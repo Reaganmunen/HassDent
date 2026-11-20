@@ -394,100 +394,160 @@
     } catch (e) { setBusy(btn, false); toast(e.message, true); }
   }
 
-  // ---- receipt: A4 statement-style layout. Print only.
+  // ---- receipt: HassDent branded A5 landscape layout. Print only.
+  // Coordinates are in the design's 1484 x 1060 px space; u() converts them to mm.
+  const RK = 210 / 1484;
+  const u = (v) => (v * RK).toFixed(3) + 'mm';
+  const RDEF = {
+    address: 'Mercantile House, 1st Floor, Room 137, Koinange Street, P.O. Box 34363 - 00100, Nairobi, Kenya',
+    phone: '+254 (0) 725 286 720 / (0) 702 910 810',
+    email: 'info@hassdentsupplies.com', email2: 'customercare@hassdentsupplies.com', web: 'www.hassdentsupplies.com',
+  };
   const RECEIPT_CSS = `
-    .rcpt { font: 13px/1.5 Arial, Helvetica, sans-serif; color: #111; width: 100%; max-width: 718px; margin: 0 auto; padding: 4px 2px; box-sizing: border-box; background: #fff; position: relative; }
-    .rcpt * { box-sizing: border-box; }
-    .rcpt .shop { text-align: center; margin-bottom: 14px; }
-    .rcpt .shop h1 { font-size: 30px; font-weight: 400; letter-spacing: .5px; margin: 0 0 6px; text-transform: uppercase; }
-    .rcpt .shop .addr { font-size: 11px; margin-bottom: 10px; }
-    .rcpt .shop .contact { font-size: 13px; line-height: 1.6; }
-    .rcpt .doc-title { text-align: center; font-size: 24px; margin: 18px 0 14px; letter-spacing: 1px; }
-    .rcpt .meta { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
-    .rcpt .meta .r { text-align: right; }
-    .rcpt .meta b { font-weight: 700; }
-    .rcpt .served { margin-bottom: 14px; }
-    .rcpt table { width: 100%; border-collapse: collapse; }
-    .rcpt thead th { text-align: left; font-weight: 700; font-size: 12px; text-transform: uppercase; padding: 6px 4px; border-bottom: 1px solid #ddd; }
-    .rcpt tbody td { padding: 6px 4px; border-bottom: 1px solid #eee; vertical-align: top; }
-    .rcpt tr { page-break-inside: avoid; }
-    .rcpt .n { text-align: right; white-space: nowrap; }
-    .rcpt .rule { border-top: 1px solid #222; margin: 22px 0 10px; }
-    .rcpt .sum { display: flex; justify-content: space-between; gap: 28px; align-items: flex-start; page-break-inside: avoid; }
-    .rcpt .sum > div { flex: 1; }
-    .rcpt .sum .row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 4px; border-bottom: 1px solid #eee; }
-    .rcpt .sum .row.b { font-weight: 700; }
-    .rcpt .sum .row.due { font-weight: 700; color: #b00020; }
-    .rcpt .sum .row small { color: #555; }
-    .rcpt .pay-info { text-align: center; margin-top: 22px; font-style: italic; font-weight: 700; line-height: 2; }
-    .rcpt .thanks { text-align: center; margin-top: 14px; }
-    .rcpt .stamp { position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg); border: 4px solid #b00020; color: #b00020; font-size: 56px; font-weight: 700; letter-spacing: 6px; padding: 4px 22px; opacity: .22; pointer-events: none; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: Arial, Helvetica, sans-serif; color: #1e2230; }
+    .pg { position: relative; width: 210mm; height: 148mm; overflow: hidden; background: #fff; page-break-after: always; break-after: page; }
+    .pg:last-child { page-break-after: auto; break-after: auto; }
+    .pg > * { position: absolute; }
+    .navy { color: #14275f; } .teal { color: #01819c; }
+    .lb { font-size: 10pt; line-height: ${u(24)}; white-space: nowrap; }
+    .fl { height: ${u(28)}; border-bottom: .25mm solid #14275f; padding: 0 ${u(8)} ${u(3)}; display: flex; align-items: flex-end; font-size: 9.5pt; overflow: hidden; white-space: nowrap; }
+    .fl > span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .addr { font-size: 8pt; line-height: ${u(31)}; width: ${u(205)}; }
+    .ct { font-size: 8.5pt; color: #14275f; line-height: ${u(30)}; white-space: nowrap; }
+    .tbw { border: .3mm solid #14275f; border-radius: ${u(8)}; overflow: hidden; }
+    .tbw table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .tbw th { background: #14275f; color: #fff; font-size: 8.5pt; font-weight: 700; height: ${u(31)}; padding: 0; text-align: center; }
+    .tbw td { height: ${u(34)}; padding: 0 ${u(12)}; border-top: .15mm solid #14275f; border-left: .2mm solid #14275f; font-size: 8.5pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tbw td:first-child { border-left: 0; text-align: center; padding: 0; }
+    .tbw td.n { text-align: right; }
+    .pill { background: #01819c; color: #fff; font-size: 8.5pt; font-weight: 700; border-radius: ${u(8)}; height: ${u(31)}; line-height: ${u(31)}; padding-left: ${u(28)}; }
+    .cb { width: ${u(18)}; height: ${u(18)}; border: .25mm solid #14275f; }
+    .cb svg { display: block; width: 100%; height: 100%; }
+    .sg { font-size: 8.5pt; font-weight: 700; color: #14275f; line-height: ${u(24)}; white-space: nowrap; }
+    .tot { border: .25mm solid #14275f; }
+    .tot .r { display: flex; height: ${u(38.4)}; border-top: .25mm solid #14275f; }
+    .tot .r:first-child { border-top: 0; }
+    .tot .l { width: ${u(201)}; background: #dcecf5; text-align: right; padding-right: ${u(31)}; font-size: 9pt; color: #14275f; display: flex; align-items: center; justify-content: flex-end; }
+    .tot .v { flex: 1; border-left: .25mm solid #14275f; text-align: right; padding-right: ${u(13)}; font-size: 10pt; display: flex; align-items: center; justify-content: flex-end; }
+    .tot .r.t .l { font-weight: 700; color: #01819c; } .tot .r.t .v, .tot .r.d .v { font-weight: 700; }
+    .tot .r.d .l { background: #01819c; color: #fff; font-weight: 700; }
+    .small { font-size: 7pt; color: #6e7486; white-space: nowrap; }
+    .stamp { left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-18deg); border: 1.2mm solid #b00020; color: #b00020; font-size: 56pt; font-weight: 700; letter-spacing: 2mm; padding: 1mm 8mm; opacity: .2; white-space: nowrap; }
   `;
+
+  function receiptPages(items) {
+    const rest = (items || []).slice(), out = [];
+    while (rest.length > 7) out.push(rest.splice(0, Math.min(14, rest.length - 1)));
+    out.push(rest);
+    return out;
+  }
+
+  const rIcon = (kind, cx, cy) => {
+    const g = {
+      home: '<polygon points="15,7 23,15 7,15" fill="#fff"/><rect x="10" y="15" width="10" height="8" fill="#fff"/>',
+      phone: '<line x1="10" y1="10" x2="20" y2="20" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>',
+      mail: '<rect x="8" y="10" width="14" height="10" fill="#fff"/><polyline points="8,10 15,16 22,10" fill="none" stroke="#14275f" stroke-width="1.4"/>',
+      globe: '<circle cx="15" cy="15" r="8" fill="none" stroke="#fff" stroke-width="1.6"/><ellipse cx="15" cy="15" rx="3.5" ry="8" fill="none" stroke="#fff" stroke-width="1.6"/><line x1="7" y1="15" x2="23" y2="15" stroke="#fff" stroke-width="1.6"/>',
+    }[kind];
+    return `<svg style="left:${u(cx - 15)};top:${u(cy - 15)};width:${u(30)};height:${u(30)}" viewBox="0 0 30 30"><circle cx="15" cy="15" r="15" fill="#14275f"/>${g}</svg>`;
+  };
 
   function receiptBody({ shop, sale: s }) {
     shop = shop || {};
+    const A = (cls, x, y, inner, extra) => `<div class="${cls}" style="left:${u(x)};top:${u(y)};${extra || ''}">${inner}</div>`;
+    const line = (x1, x2, yLine, val, extra) => `<div class="fl" style="left:${u(x1)};top:${u(yLine - 28)};width:${u(x2 - x1)};${extra || ''}"><span>${val == null ? '' : esc(val)}</span></div>`;
     const pays = (s.payments || []).filter((p) => p.status === 'completed');
     const completed = s.status === 'completed';
     const balance = completed ? (Number(s.balance) || 0) : 0;
-    const row = (l, r, cls) => `<div class="row${cls ? ' ' + cls : ''}"><span>${l}</span><span>${r}</span></div>`;
-    const kes = (v) => money2(v);
-    const contact = [shop.phone, shop.email, shop.kra_pin ? 'PIN: ' + shop.kra_pin : ''].filter(Boolean).map(esc).join('<br>');
-    const paybill = shop.paybill
-      ? `<div class="pay-info">M-PESA PAYBILL<br>${esc(shop.paybill)}${shop.paybill_account ? '<br>ACC ' + esc(shop.paybill_account) : ''}</div>` : '';
+    const used = new Set(pays.map((p) => p.method));
+    const others = [...used].filter((m) => !['cash', 'mpesa', 'bank_transfer'].includes(m)).map((m) => PAY_LABEL[m] || m);
+    const refs = pays.map((p) => p.reference).filter(Boolean);
+    const dt = {};
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Nairobi', day: '2-digit', month: '2-digit', year: 'numeric' }).formatToParts(new Date(s.sold_at || Date.now())).forEach((p) => { dt[p.type] = p.value; });
+    const emails = [shop.email || RDEF.email, RDEF.email2].filter((e, i, a) => e && a.indexOf(e) === i).slice(0, 2);
+    const disc = (Number(s.discount_amount) || 0) + (Number(s.loyalty_discount) || 0);
+    const tick = '<svg viewBox="0 0 18 18"><polyline points="3,9 7.5,14 15,4" fill="none" stroke="#01819c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const box = (x, y, on) => A('cb', x, y, on ? tick : '');
+    const pageList = receiptPages(s.items);
 
-    return `<div class="rcpt">
-      ${s.status === 'voided' ? '<div class="stamp">VOIDED</div>' : ''}
-      <div class="shop">
-        <h1>${esc(shop.name || 'HassDent')}</h1>
-        ${shop.address ? `<div class="addr">${esc(shop.address)}</div>` : ''}
-        ${contact ? `<div class="contact">${contact}</div>` : ''}
-      </div>
-      <div class="doc-title">RECEIPT</div>
-      <div class="meta">
-        <div>
-          <div><b>RECEIPT No.</b> ${esc(s.sale_number)}</div>
-          <div><b>Customer</b></div>
-          <div>${s.customer_name ? esc(s.customer_name) : 'Walk-in'}</div>
-          ${s.customer_phone ? `<div><b>Mobile</b>: ${esc(s.customer_phone)}</div>` : ''}
-        </div>
-        <div class="r"><b>Date</b> ${esc(fmt.when(s.sold_at))}</div>
-      </div>
-      <div class="served"><b>Served by :</b> ${esc(s.sold_by_name || '—')}</div>
+    const head = `
+      <svg style="left:${u(25)};top:${u(27)};width:${u(1435)};height:${u(246)}" viewBox="0 0 1435 246" preserveAspectRatio="none">
+        <polygon points="0,0 783,0 645,246 0,246" fill="#f7f7f9"/>
+        <polygon points="783,0 797,0 659,246 645,246" fill="#01819c"/>
+        <polygon points="793,0 977,0 949,66 765,66" fill="#01819c"/>
+        <polygon points="987,0 1163,0 1135,66 959,66" fill="#024266"/>
+        <polygon points="1173,0 1435,0 1435,66 1145,66" fill="#142553"/>
+      </svg>
+      <img src="${location.origin}/img/receipt-logo.png" alt="HassDent" style="left:${u(50)};top:${u(70)};width:${u(622)};height:${u(162)}">
+      ${rIcon('home', 800, 140)}
+      ${A('addr', 824, 128, esc(shop.address || RDEF.address) + (shop.kra_pin ? '<br>PIN: ' + esc(shop.kra_pin) : ''))}
+      <div style="left:${u(1049)};top:${u(124)};height:${u(148)};border-left:.2mm solid #14275f"></div>
+      ${[['phone', shop.phone || RDEF.phone], ['mail', emails[0]], ['mail', emails[1]], ['globe', shop.website || RDEF.web]].map(([k, v], i) => v ? rIcon(k, 1090, 137 + i * 40) + A('ct', 1119, 122 + i * 40, esc(v)) : '').join('')}
+      ${A('navy', 58, 300, 'RECEIPT', `font-size:23pt;font-weight:700;line-height:${u(60)}`)}
+      ${A('navy', 796, 320, 'No.', `font-size:11pt;font-weight:700;line-height:${u(28)}`)}
+      ${line(846, 1023, 344, s.sale_number, 'font-weight:700')}
+      ${A('navy', 1123, 320, 'Date:', `font-size:11pt;font-weight:700;line-height:${u(28)}`)}
+      ${line(1196, 1250, 344, dt.day)}${A('navy', 1256, 320, '/', `font-size:11pt;line-height:${u(28)}`)}
+      ${line(1274, 1329, 344, dt.month)}${A('navy', 1337, 320, '/ 20', `font-size:11pt;line-height:${u(28)}`)}
+      ${line(1378, 1436, 344, String(dt.year || '').slice(-2))}
+      ${A('lb', 58, 372, 'Received from:')}${line(205, 1436, 395, s.customer_name || 'Walk-in')}
+      ${A('lb', 58, 420, 'The sum of Ksh:')}${line(205, 733, 442, money2(s.amount_paid != null ? s.amount_paid : s.total).replace(/^[^\d-]+/, ''), 'font-weight:700')}
+      ${A('lb', 774, 420, 'Being payment for:')}${line(948, 1436, 442, 'Goods sold - ' + (s.sale_number || ''))}`;
 
-      <table>
-        <thead><tr><th>Item</th><th class="n">Qty</th><th class="n">Price</th><th class="n">Total</th></tr></thead>
-        <tbody>${(s.items || []).map((i) => `<tr>
-          <td>${esc(i.product_name)}${i.sku ? ' , ' + esc(i.sku) : ''}</td>
-          <td class="n">${num(i.quantity)} Pc(s)</td>
-          <td class="n">${money2(i.unit_price)}</td>
-          <td class="n">${money2(i.line_total)}</td></tr>`).join('')}</tbody>
-      </table>
+    const plain = (v) => money2(v).replace(/^[^\d-]+/, '');
+    return pageList.map((rows, pi) => {
+      const final = pi === pageList.length - 1;
+      const n = final ? Math.max(7, rows.length) : rows.length;
+      const trs = [];
+      for (let i = 0; i < n; i++) {
+        const it = rows[i];
+        trs.push(it
+          ? `<tr><td>${num(it.quantity)}</td><td>${esc(it.product_name)}${it.sku ? ', ' + esc(it.sku) : ''}</td><td class="n">${plain(it.unit_price)}</td><td class="n">${plain(it.line_total)}</td></tr>`
+          : '<tr><td></td><td></td><td class="n"></td><td class="n"></td></tr>');
+      }
+      const table = `<div class="tbw" style="left:${u(50)};top:${u(472)};width:${u(1387)}"><table>
+        <colgroup><col style="width:${u(115)}"><col style="width:${u(814)}"><col style="width:${u(233)}"><col style="width:${u(225)}"></colgroup>
+        <thead><tr><th>QTY</th><th>ITEM DESCRIPTION</th><th>UNIT PRICE (KSH)</th><th>AMOUNT (KSH)</th></tr></thead><tbody>${trs.join('')}</tbody></table></div>`;
 
-      <div class="rule"></div>
-      <div class="sum">
-        <div>
-          ${pays.map((p) => row(`${esc(PAY_LABEL[p.method] || p.method)}${p.reference ? ` <small>· ${esc(p.reference)}</small>` : ''}`, `${kes(p.amount)} <small>${esc(fmt.when(p.paid_at))}</small>`)).join('')}
-          ${row('Total Paid', kes(s.amount_paid), 'b')}
-          ${completed ? row('Total Due', kes(balance), balance > 0 ? 'due' : 'b') : ''}
+      const foot = !final
+        ? A('small', 742 - 120, 984, 'Continued on next page...', `width:${u(240)};text-align:center;font-style:italic;font-size:9pt`)
+        : `
+        ${A('pill', 50, 763, 'PAYMENT METHOD', `width:${u(210)}`)}
+        ${refs.length ? A('small', 275, 770, esc('Ref: ' + refs.join(', ')), `width:${u(235)};overflow:hidden;text-overflow:ellipsis`) : ''}
+        ${box(51, 824, used.has('cash'))}${A('lb', 76, 820, 'Cash')}
+        ${box(147, 824, used.has('mpesa'))}${A('lb', 172, 820, 'Mpesa')}
+        ${box(252, 824, used.has('bank_transfer'))}${A('lb', 277, 820, 'Bank Transfer')}
+        ${box(406, 824, false)}${A('lb', 431, 820, 'Cheque')}
+        ${box(51, 873, others.length > 0)}${A('lb', 76, 869, 'Other:')}${line(142, 493, 892, others.join(', '))}
+        <div style="left:${u(521)};top:${u(775)};height:${u(117)};border-left:.25mm solid #01819c"></div>
+        ${A('sg', 548, 771, 'PAID BY:')}${line(635, 955, 794, s.customer_name || 'Walk-in')}
+        ${A('sg', 548, 821, 'ID / NO.:')}${line(635, 955, 844, '')}
+        ${A('sg', 548, 870, 'SIGNATURE:')}${line(664, 955, 892, '')}
+        ${A('lb', 58, 950, 'Received by:')}${line(183, 481, 970, s.sold_by_name || '')}
+        ${shop.paybill ? A('sg', 548, 950, 'M-PESA PAYBILL ' + esc(shop.paybill) + (shop.paybill_account ? ' &nbsp;|&nbsp; ACC ' + esc(shop.paybill_account) : ''), 'font-size:7.5pt') : ''}
+        <div class="tot" style="left:${u(1010)};top:${u(749)};width:${u(427)}">
+          <div class="r"><div class="l">SUBTOTAL</div><div class="v">${plain(s.subtotal)}</div></div>
+          <div class="r"><div class="l">DISCOUNT</div><div class="v">${plain(disc)}</div></div>
+          <div class="r t"><div class="l">TOTAL (KSH)</div><div class="v">${plain(s.total)}</div></div>
+          <div class="r"><div class="l">PAID</div><div class="v">${plain(s.amount_paid)}</div></div>
+          <div class="r d"><div class="l">BALANCE DUE</div><div class="v">${plain(balance)}</div></div>
         </div>
-        <div>
-          ${row('Subtotal:', kes(s.subtotal), 'b')}
-          ${Number(s.discount_amount) > 0 ? row('Discount:', '− ' + kes(s.discount_amount)) : ''}
-          ${Number(s.loyalty_discount) > 0 ? row('Loyalty:', '− ' + kes(s.loyalty_discount)) : ''}
-          ${row('VAT included:', kes(s.tax_total))}
-          ${row('Total:', kes(s.total), 'b')}
-        </div>
-      </div>
-      ${paybill}
-      <div class="thanks">${esc(shop.footer || 'Thank you for allowing us to serve you!')}</div>
-    </div>`;
+        ${Number(s.tax_total) > 0 ? A('small', 1010, 949, 'Includes VAT of KSh ' + plain(s.tax_total), `width:${u(427)};text-align:right`) : ''}
+        <div style="left:${u(25)};top:${u(1013)};width:${u(506)};border-top:.25mm solid #01819c"></div>
+        <div style="left:${u(953)};top:${u(1013)};width:${u(506)};border-top:.25mm solid #01819c"></div>
+        ${A('teal', 531, 985, esc(shop.footer || 'Thank you for your business!'), `width:${u(422)};text-align:center;font:italic 14pt Georgia,'Times New Roman',serif;line-height:${u(56)}`)}`;
+
+      return `<div class="pg">${head}${table}${foot}${s.status === 'voided' ? '<div class="stamp">VOIDED</div>' : ''}</div>`;
+    }).join('');
   }
 
   async function fetchReceipt() { return api(`/sales/${state.sale.id}/receipt`); }
 
   function receiptDoc(r) {
     return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.sale.sale_number)}</title><style>
-      @page { size: A4; margin: 12mm; } body { margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
+      @page { size: 210mm 148mm; margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
   }
 
   async function printReceipt(btn) {
@@ -497,7 +557,10 @@
     try {
       const r = await fetchReceipt();
       w.document.open(); w.document.write(receiptDoc(r)); w.document.close();
-      w.focus(); setTimeout(() => w.print(), 350);
+      w.focus();
+      const imgs = Array.from(w.document.images);
+      await Promise.race([Promise.all(imgs.map((im) => (im.complete ? 0 : new Promise((ok) => { im.onload = im.onerror = ok; })))), new Promise((ok) => setTimeout(ok, 2500))]);
+      setTimeout(() => w.print(), 150);
     } catch (e) { w.close(); toast(e.message, true); }
     setBusy(btn, false);
   }
