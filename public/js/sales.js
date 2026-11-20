@@ -504,7 +504,7 @@
       for (let i = 0; i < n; i++) {
         const it = rows[i];
         trs.push(it
-          ? `<tr><td>${num(it.quantity)}</td><td>${esc(it.product_name)}${it.sku ? ', ' + esc(it.sku) : ''}</td><td class="n">${plain(it.unit_price)}</td><td class="n">${plain(it.line_total)}</td></tr>`
+          ? `<tr><td>${num(it.quantity)}</td><td>${esc(it.product_name)}</td><td class="n">${plain(it.unit_price)}</td><td class="n">${plain(it.line_total)}</td></tr>`
           : '<tr><td></td><td></td><td class="n"></td><td class="n"></td></tr>');
       }
       const table = `<div class="tbw" style="left:${u(50)};top:${u(472)};width:${u(1387)}"><table>

@@ -158,7 +158,7 @@
         const by = tb.y + tb.hh + i * tb.rh + 22;
         font('normal', 8.5); ink(INK);
         text(String(it.quantity), 107, by, { align: 'center' });
-        doc.text(clip(it.product_name + (it.sku ? ', ' + it.sku : ''), 790), P(178), P(by));
+        doc.text(clip(it.product_name, 790), P(178), P(by));
         text(n2(it.unit_price), 1198, by, { align: 'right' });
         text(n2(it.line_total), 1423, by, { align: 'right' });
       });
