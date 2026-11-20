@@ -546,22 +546,47 @@
   async function fetchReceipt() { return api(`/sales/${state.sale.id}/receipt`); }
 
   function receiptDoc(r) {
-    return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(r.sale.sale_number)}</title><style>
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Receipt</title><style>
       @page { size: A5 landscape; margin: 0; } ${RECEIPT_CSS}</style></head><body>${receiptBody(r)}</body></html>`;
   }
 
+  // Prints the same A5-landscape PDF that is shared on WhatsApp. The PDF viewer handles paper size and
+  // orientation itself, so it does not come out rotated the way printing an HTML page can.
+  function printPdf(r) {
+    return new Promise((resolve, reject) => {
+      let url;
+      try { url = URL.createObjectURL(HD.receiptPdf.file(r)); } catch (e) { return reject(e); }
+      const fr = document.createElement('iframe');
+      fr.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+      const cleanup = () => setTimeout(() => { URL.revokeObjectURL(url); fr.remove(); }, 120000);
+      fr.onload = () => {
+        setTimeout(() => {
+          try { fr.contentWindow.focus(); fr.contentWindow.print(); }
+          catch (e) { window.open(url, '_blank'); }   // viewer blocked scripted printing: open it so Ctrl+P works there
+          cleanup(); resolve();
+        }, 400);
+      };
+      fr.src = url;
+      document.body.appendChild(fr);
+    });
+  }
+
   async function printReceipt(btn) {
-    const w = window.open('', '_blank', 'width=900,height=800');   // open first so the pop-up isn't blocked
-    if (!w) return toast('Allow pop-ups to print receipts', true);
+    const canPdf = Boolean(window.jspdf && HD.receiptPdf);
+    const w = canPdf ? null : window.open('', '_blank', 'width=900,height=800');   // HTML fallback: open first so the pop-up isn't blocked
+    if (!canPdf && !w) return toast('Allow pop-ups to print receipts', true);
     setBusy(btn, true, 'Preparing…');
     try {
       const r = await fetchReceipt();
-      w.document.open(); w.document.write(receiptDoc(r)); w.document.close();
-      w.focus();
-      const imgs = Array.from(w.document.images);
-      await Promise.race([Promise.all(imgs.map((im) => (im.complete ? 0 : new Promise((ok) => { im.onload = im.onerror = ok; })))), new Promise((ok) => setTimeout(ok, 2500))]);
-      setTimeout(() => w.print(), 150);
-    } catch (e) { w.close(); toast(e.message, true); }
+      if (canPdf) { await printPdf(r); }
+      else {
+        w.document.open(); w.document.write(receiptDoc(r)); w.document.close();
+        w.focus();
+        const imgs = Array.from(w.document.images);
+        await Promise.race([Promise.all(imgs.map((im) => (im.complete ? 0 : new Promise((ok) => { im.onload = im.onerror = ok; })))), new Promise((ok) => setTimeout(ok, 2500))]);
+        setTimeout(() => w.print(), 150);
+      }
+    } catch (e) { if (w) w.close(); toast(e.message, true); }
     setBusy(btn, false);
   }
 
